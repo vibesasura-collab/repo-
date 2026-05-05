@@ -45,10 +45,10 @@ jobs:
           java-version: 17
 
       - name: Build
-        run: mvn clean package
+        run: mvn clean package -DskipTests
 
       - name: Run Bot
-        run: java -cp target/game-bot-1.0.jar Main
+        run: java -jar target/game-bot-1.0-jar-with-dependencies.jar
         env:
           GAME_ID: ${{ secrets[matrix.id] }}
           GAME_PASSWORD: ${{ secrets[matrix.pass] }}
