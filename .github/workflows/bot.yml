@@ -1,0 +1,30 @@
+name: Game Bot
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build
+        run: mvn clean package
+
+      - name: Run Bot
+        run: java -cp target/game-bot-1.0.jar Main
+        env:
+          GAME_ID: ${{ secrets.GAME_ID }}
+          GAME_PASSWORD: ${{ secrets.GAME_PASSWORD }}
