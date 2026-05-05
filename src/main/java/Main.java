@@ -45,7 +45,7 @@ public class Main {
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
-            // -------- LOGIN --------
+            // LOGIN
             driver.get("https://elem.cards/login/");
             sleep(2000);
 
@@ -58,13 +58,10 @@ public class Main {
             driver.findElement(By.cssSelector("a.urfin")).click();
             sleep(3000);
 
-            // -------- DUEL LOOP --------
+            // DUEL LOOP
             while (true) {
 
-                if (shouldStopNow(startTime)) {
-                    System.out.println("Stopping...");
-                    break;
-                }
+                if (shouldStopNow(startTime)) break;
 
                 driver.get("https://elem.cards/duel/");
                 sleep(2000);
@@ -80,14 +77,12 @@ public class Main {
                 attackBtn.get(0).click();
                 sleep(2000);
 
-                // -------- FIGHT LOOP --------
+                // FIGHT LOOP
                 int rounds = 0;
 
                 while (rounds < 50) {
 
-                    if (isEnemyDead(driver)) {
-                        break;
-                    }
+                    if (isEnemyDead(driver)) break;
 
                     clickIfPresent(driver, "a[href*='attack0']");
                     sleep(1000);
@@ -101,7 +96,7 @@ public class Main {
                     rounds++;
                 }
 
-                // -------- NEXT DUEL --------
+                // NEXT DUEL
                 List<WebElement> another = driver.findElements(
                         By.xpath("//span[text()='Another duel']/ancestor::a"));
 
@@ -109,7 +104,6 @@ public class Main {
                     another.get(0).click();
                     sleep(2000);
                 } else {
-                    System.out.println("No next duel.");
                     break;
                 }
             }
@@ -129,9 +123,7 @@ public class Main {
     public static void clickIfPresent(WebDriver driver, String css) {
         List<WebElement> elements = driver.findElements(By.cssSelector(css));
         if (!elements.isEmpty()) {
-            try {
-                elements.get(0).click();
-            } catch (Exception ignored) {}
+            try { elements.get(0).click(); } catch (Exception ignored) {}
         }
     }
 
@@ -146,9 +138,7 @@ public class Main {
     }
 
     public static void sleep(int ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
