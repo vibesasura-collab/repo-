@@ -12,7 +12,27 @@ jobs:
 
     strategy:
       matrix:
-        account: [1,2,3,4,5,6,7,8,9,10]
+        include:
+          - id: GAME_ID_1
+            pass: GAME_PASSWORD_1
+          - id: GAME_ID_2
+            pass: GAME_PASSWORD_2
+          - id: GAME_ID_3
+            pass: GAME_PASSWORD_3
+          - id: GAME_ID_4
+            pass: GAME_PASSWORD_4
+          - id: GAME_ID_5
+            pass: GAME_PASSWORD_5
+          - id: GAME_ID_6
+            pass: GAME_PASSWORD_6
+          - id: GAME_ID_7
+            pass: GAME_PASSWORD_7
+          - id: GAME_ID_8
+            pass: GAME_PASSWORD_8
+          - id: GAME_ID_9
+            pass: GAME_PASSWORD_9
+          - id: GAME_ID_10
+            pass: GAME_PASSWORD_10
 
     steps:
       - name: Checkout
@@ -30,5 +50,5 @@ jobs:
       - name: Run Bot
         run: java -cp target/game-bot-1.0.jar Main
         env:
-          GAME_ID: ${{ secrets['GAME_ID_' + matrix.account] }}
-          GAME_PASSWORD: ${{ secrets['GAME_PASSWORD_' + matrix.account] }}
+          GAME_ID: ${{ secrets[matrix.id] }}
+          GAME_PASSWORD: ${{ secrets[matrix.pass] }}
