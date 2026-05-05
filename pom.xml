@@ -24,8 +24,6 @@
 
     <build>
         <plugins>
-
-            <!-- Create runnable fat JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -52,7 +50,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
