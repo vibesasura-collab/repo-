@@ -7,15 +7,11 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
 public class Main {
 
     private static final int MAX_RUN_MINUTES = 345;
-    private static final LocalTime DAILY_STOP_START = LocalTime.of(23, 30);
-    private static final LocalTime DAILY_STOP_END = LocalTime.of(1, 0);
 
     public static void main(String[] args) {
 
@@ -23,12 +19,7 @@ public class Main {
         String pass = System.getenv("GAME_PASSWORD");
 
         if (user == null || pass == null) {
-            throw new RuntimeException("Secrets not set");
-        }
-
-        if (isInShutdownWindow()) {
-            System.out.println("Shutdown window. Exiting.");
-            return;
+            throw new RuntimeException("Missing credentials");
         }
 
         WebDriverManager.chromedriver().setup();
@@ -37,7 +28,6 @@ public class Main {
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
 
         WebDriver driver = new ChromeDriver(options);
         Instant startTime = Instant.now();
@@ -45,7 +35,7 @@ public class Main {
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
-            // LOGIN
+            // ---------------- LOGIN ----------------
             driver.get("https://elem.cards/login/");
             sleep(2000);
 
@@ -58,54 +48,35 @@ public class Main {
             driver.findElement(By.cssSelector("a.urfin")).click();
             sleep(3000);
 
-            // DUEL LOOP
-            while (true) {
+            // ---------------- DAILY REWARD ----------------
+            claimDailyReward(driver);
 
-                if (shouldStopNow(startTime)) break;
+            // ---------------- MAIN LOOP ----------------
+            while (!shouldStop(startTime)) {
 
+                // GO TO DUELS PAGE
                 driver.get("https://elem.cards/duel/");
                 sleep(2000);
 
+                // Check if duels exist
                 List<WebElement> attackBtn = driver.findElements(
-                        By.xpath("//a[contains(@href,'/duel/tobattle/')]"));
+                        By.xpath("//a[contains(@href,'/duel/tobattle/')]")
+                );
 
                 if (attackBtn.isEmpty()) {
-                    System.out.println("No duels left.");
+                    System.out.println("No duels available.");
                     break;
                 }
 
                 attackBtn.get(0).click();
                 sleep(2000);
 
-                // FIGHT LOOP
-                int rounds = 0;
+                // ================= FIGHT AREA =================
+                // 👉 INSERT YOUR EXISTING ATTACK LOGIC HERE
+                runFightLoop(driver);
 
-                while (rounds < 50) {
-
-                    if (isEnemyDead(driver)) break;
-
-                    clickIfPresent(driver, "a[href*='attack0']");
-                    sleep(1000);
-
-                    clickIfPresent(driver, "a[href*='attack1']");
-                    sleep(1000);
-
-                    clickIfPresent(driver, "a[href*='attack2']");
-                    sleep(1000);
-
-                    rounds++;
-                }
-
-                // NEXT DUEL
-                List<WebElement> another = driver.findElements(
-                        By.xpath("//span[text()='Another duel']/ancestor::a"));
-
-                if (!another.isEmpty()) {
-                    another.get(0).click();
-                    sleep(2000);
-                } else {
-                    break;
-                }
+                // After fight
+                clickAnotherDuel(driver);
             }
 
         } catch (Exception e) {
@@ -115,29 +86,82 @@ public class Main {
         }
     }
 
-    public static boolean isEnemyDead(WebDriver driver) {
-        return !driver.findElements(
-                By.xpath("//span[text()='Another duel']")).isEmpty();
-    }
+    // ---------------- DAILY REWARD ----------------
+    private static void claimDailyReward(WebDriver driver) {
+        try {
+            List<WebElement> rewardBtn = driver.findElements(
+                    By.xpath("//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]")
+            );
 
-    public static void clickIfPresent(WebDriver driver, String css) {
-        List<WebElement> elements = driver.findElements(By.cssSelector(css));
-        if (!elements.isEmpty()) {
-            try { elements.get(0).click(); } catch (Exception ignored) {}
+            if (!rewardBtn.isEmpty()) {
+                System.out.println("Claiming daily reward...");
+                rewardBtn.get(0).click();
+                sleep(2000);
+            } else {
+                System.out.println("No daily reward.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Reward check failed.");
         }
     }
 
-    public static boolean shouldStopNow(Instant startTime) {
-        long minutes = Duration.between(startTime, Instant.now()).toMinutes();
-        return minutes >= MAX_RUN_MINUTES || isInShutdownWindow();
+    // ---------------- FIGHT LOOP (placeholder) ----------------
+    private static void runFightLoop(WebDriver driver) {
+        int rounds = 0;
+
+        while (rounds < 50) {
+
+            if (isEnemyDead(driver)) {
+                break;
+            }
+
+            clickIfPresent(driver, "a[href*='attack0']");
+            sleep(1000);
+
+            clickIfPresent(driver, "a[href*='attack1']");
+            sleep(1000);
+
+            clickIfPresent(driver, "a[href*='attack2']");
+            sleep(1000);
+
+            rounds++;
+        }
     }
 
-    public static boolean isInShutdownWindow() {
-        LocalTime now = LocalTime.now(ZoneOffset.UTC);
-        return !now.isBefore(DAILY_STOP_START) || now.isBefore(DAILY_STOP_END);
+    // ---------------- AFTER FIGHT ----------------
+    private static void clickAnotherDuel(WebDriver driver) {
+        try {
+            List<WebElement> btn = driver.findElements(
+                    By.xpath("//span[text()='Another duel']/ancestor::a")
+            );
+
+            if (!btn.isEmpty()) {
+                btn.get(0).click();
+                sleep(2000);
+            }
+
+        } catch (Exception ignored) {}
     }
 
-    public static void sleep(int ms) {
+    // ---------------- HELPERS ----------------
+    private static boolean isEnemyDead(WebDriver driver) {
+        return !driver.findElements(By.xpath("//span[text()='Another duel']")).isEmpty();
+    }
+
+    private static void clickIfPresent(WebDriver driver, String css) {
+        List<WebElement> el = driver.findElements(By.cssSelector(css));
+        if (!el.isEmpty()) {
+            try { el.get(0).click(); } catch (Exception ignored) {}
+        }
+    }
+
+    private static boolean shouldStop(Instant start) {
+        long mins = Duration.between(start, Instant.now()).toMinutes();
+        return mins >= MAX_RUN_MINUTES;
+    }
+
+    private static void sleep(int ms) {
         try { Thread.sleep(ms); } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
