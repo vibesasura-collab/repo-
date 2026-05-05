@@ -14,44 +14,44 @@ jobs:
       matrix:
         include:
           - id: 1
-            GAME_ID: GAME_ID_1
-            GAME_PASSWORD: GAME_PASSWORD_1
+            game_id_secret: GAME_ID_1
+            game_password_secret: GAME_PASSWORD_1
 
           - id: 2
-            GAME_ID: GAME_ID_2
-            GAME_PASSWORD: GAME_PASSWORD_2
+            game_id_secret: GAME_ID_2
+            game_password_secret: GAME_PASSWORD_2
 
           - id: 3
-            GAME_ID: GAME_ID_3
-            GAME_PASSWORD: GAME_PASSWORD_3
+            game_id_secret: GAME_ID_3
+            game_password_secret: GAME_PASSWORD_3
 
           - id: 4
-            GAME_ID: GAME_ID_4
-            GAME_PASSWORD: GAME_PASSWORD_4
+            game_id_secret: GAME_ID_4
+            game_password_secret: GAME_PASSWORD_4
 
           - id: 5
-            GAME_ID: GAME_ID_5
-            GAME_PASSWORD: GAME_PASSWORD_5
+            game_id_secret: GAME_ID_5
+            game_password_secret: GAME_PASSWORD_5
 
           - id: 6
-            GAME_ID: GAME_ID_6
-            GAME_PASSWORD: GAME_PASSWORD_6
+            game_id_secret: GAME_ID_6
+            game_password_secret: GAME_PASSWORD_6
 
           - id: 7
-            GAME_ID: GAME_ID_7
-            GAME_PASSWORD: GAME_PASSWORD_7
+            game_id_secret: GAME_ID_7
+            game_password_secret: GAME_PASSWORD_7
 
           - id: 8
-            GAME_ID: GAME_ID_8
-            GAME_PASSWORD: GAME_PASSWORD_8
+            game_id_secret: GAME_ID_8
+            game_password_secret: GAME_PASSWORD_8
 
           - id: 9
-            GAME_ID: GAME_ID_9
-            GAME_PASSWORD: GAME_PASSWORD_9
+            game_id_secret: GAME_ID_9
+            game_password_secret: GAME_PASSWORD_9
 
           - id: 10
-            GAME_ID: GAME_ID_10
-            GAME_PASSWORD: GAME_PASSWORD_10
+            game_id_secret: GAME_ID_10
+            game_password_secret: GAME_PASSWORD_10
 
     steps:
       - name: Checkout
@@ -69,5 +69,5 @@ jobs:
       - name: Run Bot
         run: java -jar target/game-bot-1.0-jar-with-dependencies.jar
         env:
-          GAME_ID: ${{ secrets[matrix.GAME_ID] }}
-          GAME_PASSWORD: ${{ secrets[matrix.GAME_PASSWORD] }}
+          GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
+          GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
