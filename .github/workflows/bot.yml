@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
+    strategy:
+      matrix:
+        account: [1,2,3,4,5,6,7,8,9,10]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,5 +30,5 @@ jobs:
       - name: Run Bot
         run: java -cp target/game-bot-1.0.jar Main
         env:
-          GAME_ID: ${{ secrets.GAME_ID }}
-          GAME_PASSWORD: ${{ secrets.GAME_PASSWORD }}
+          GAME_ID: ${{ secrets['GAME_ID_' + matrix.account] }}
+          GAME_PASSWORD: ${{ secrets['GAME_PASSWORD_' + matrix.account] }}
