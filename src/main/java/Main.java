@@ -30,7 +30,7 @@ public class Main {
         options.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(options);
-        Instant startTime = Instant.now();
+        Instant start = Instant.now();
 
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
@@ -51,31 +51,26 @@ public class Main {
             // ---------------- DAILY REWARD ----------------
             claimDailyReward(driver);
 
-            // ---------------- MAIN LOOP ----------------
-            while (!shouldStop(startTime)) {
+            // ---------------- DUEL LOOP ----------------
+            while (!shouldStop(start)) {
 
-                // GO TO DUELS PAGE
                 driver.get("https://elem.cards/duel/");
                 sleep(2000);
 
-                // Check if duels exist
                 List<WebElement> attackBtn = driver.findElements(
                         By.xpath("//a[contains(@href,'/duel/tobattle/')]")
                 );
 
                 if (attackBtn.isEmpty()) {
-                    System.out.println("No duels available.");
+                    System.out.println("No duels left.");
                     break;
                 }
 
                 attackBtn.get(0).click();
                 sleep(2000);
 
-                // ================= FIGHT AREA =================
-                // 👉 INSERT YOUR EXISTING ATTACK LOGIC HERE
-                runFightLoop(driver);
+                fight(driver);
 
-                // After fight
                 clickAnotherDuel(driver);
             }
 
@@ -88,60 +83,48 @@ public class Main {
 
     // ---------------- DAILY REWARD ----------------
     private static void claimDailyReward(WebDriver driver) {
-        try {
-            List<WebElement> rewardBtn = driver.findElements(
-                    By.xpath("//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]")
-            );
+        List<WebElement> btn = driver.findElements(
+                By.xpath("//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]")
+        );
 
-            if (!rewardBtn.isEmpty()) {
-                System.out.println("Claiming daily reward...");
-                rewardBtn.get(0).click();
-                sleep(2000);
-            } else {
-                System.out.println("No daily reward.");
-            }
-
-        } catch (Exception e) {
-            System.out.println("Reward check failed.");
+        if (!btn.isEmpty()) {
+            System.out.println("Claiming daily reward...");
+            btn.get(0).click();
+            sleep(2000);
         }
     }
 
-    // ---------------- FIGHT LOOP (placeholder) ----------------
-    private static void runFightLoop(WebDriver driver) {
+    // ---------------- FIGHT ----------------
+    private static void fight(WebDriver driver) {
         int rounds = 0;
 
         while (rounds < 50) {
 
-            if (isEnemyDead(driver)) {
-                break;
-            }
+            if (isEnemyDead(driver)) break;
 
             clickIfPresent(driver, "a[href*='attack0']");
-            sleep(1000);
+            sleep(800);
 
             clickIfPresent(driver, "a[href*='attack1']");
-            sleep(1000);
+            sleep(800);
 
             clickIfPresent(driver, "a[href*='attack2']");
-            sleep(1000);
+            sleep(800);
 
             rounds++;
         }
     }
 
-    // ---------------- AFTER FIGHT ----------------
+    // ---------------- NEXT DUEL ----------------
     private static void clickAnotherDuel(WebDriver driver) {
-        try {
-            List<WebElement> btn = driver.findElements(
-                    By.xpath("//span[text()='Another duel']/ancestor::a")
-            );
+        List<WebElement> btn = driver.findElements(
+                By.xpath("//span[text()='Another duel']/ancestor::a")
+        );
 
-            if (!btn.isEmpty()) {
-                btn.get(0).click();
-                sleep(2000);
-            }
-
-        } catch (Exception ignored) {}
+        if (!btn.isEmpty()) {
+            btn.get(0).click();
+            sleep(2000);
+        }
     }
 
     // ---------------- HELPERS ----------------
@@ -157,13 +140,10 @@ public class Main {
     }
 
     private static boolean shouldStop(Instant start) {
-        long mins = Duration.between(start, Instant.now()).toMinutes();
-        return mins >= MAX_RUN_MINUTES;
+        return java.time.Duration.between(start, Instant.now()).toMinutes() >= MAX_RUN_MINUTES;
     }
 
     private static void sleep(int ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        try { Thread.sleep(ms); } catch (Exception ignored) {}
     }
 }
