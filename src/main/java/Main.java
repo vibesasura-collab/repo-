@@ -5,12 +5,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 
 public class Main {
-
-    private static final int MAX_RUN_MINUTES = 345;
 
     public static void main(String[] args) {
 
@@ -29,43 +26,42 @@ public class Main {
         options.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(options);
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-
-        Instant start = Instant.now();
+        new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {
-
             login(driver);
-
             claimDailyReward(driver);
 
-            while (!shouldStop(start)) {
-
-                driver.get("https://elem.cards/duel/");
-                sleep(2000);
-
-                List<WebElement> attackBtn = driver.findElements(
-                        By.xpath("//a[contains(@href,'/duel/tobattle/')]")
-                );
-
-                if (attackBtn.isEmpty()) {
-                    System.out.println("No duels left.");
-                    break;
-                }
-
-                attackBtn.get(0).click();
-                sleep(2000);
-
-                fight(driver);
-
-                clickAnotherDuel(driver);
-            }
+            runOnce(driver);
 
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             driver.quit();
         }
+    }
+
+    // ---------------- SINGLE RUN ----------------
+    private static void runOnce(WebDriver driver) {
+
+        driver.get("https://elem.cards/duel/");
+        sleep(2000);
+
+        List<WebElement> attackBtn = driver.findElements(
+                By.xpath("//a[contains(@href,'/duel/tobattle/')]")
+        );
+
+        if (attackBtn.isEmpty()) {
+            System.out.println("No duels left.");
+            return;
+        }
+
+        attackBtn.get(0).click();
+        sleep(2000);
+
+        fight(driver);
+
+        clickAnotherDuel(driver);
     }
 
     // ---------------- LOGIN ----------------
@@ -86,7 +82,7 @@ public class Main {
         sleep(3000);
     }
 
-    // ---------------- DAILY REWARD (FIXED CORE) ----------------
+    // ---------------- DAILY REWARD ----------------
     private static void claimDailyReward(WebDriver driver) {
 
         try {
@@ -157,7 +153,6 @@ public class Main {
         }
     }
 
-    // ---------------- HELPERS ----------------
     private static boolean isEnemyDead(WebDriver driver) {
         return !driver.findElements(By.xpath("//span[contains(text(),'Another duel')]")).isEmpty();
     }
@@ -169,10 +164,6 @@ public class Main {
                 el.get(0).click();
             } catch (Exception ignored) {}
         }
-    }
-
-    private static boolean shouldStop(Instant start) {
-        return Duration.between(start, Instant.now()).toMinutes() >= MAX_RUN_MINUTES;
     }
 
     private static void sleep(int ms) {
