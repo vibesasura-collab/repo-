@@ -26,23 +26,17 @@
 
     </dependencies>
 
-    <!-- Build Section -->
+    <!-- Build -->
     <build>
         <plugins>
 
-            <!-- Assembly plugin (your existing JAR builder) -->
+            <!-- JAR with dependencies (NO mainClass LOCK!) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.6.0</version>
 
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>RaidBot</mainClass>
-                        </manifest>
-                    </archive>
-
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -57,9 +51,10 @@
                         </goals>
                     </execution>
                 </executions>
+
             </plugin>
 
-            <!-- ✅ FIX: This enables mvn exec:java -->
+            <!-- Enables mvn exec:java -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>maven-exec-plugin</artifactId>
