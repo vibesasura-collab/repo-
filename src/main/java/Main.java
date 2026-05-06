@@ -3,7 +3,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-import java.time.Duration;
 import java.util.List;
 
 public class Main {
@@ -25,13 +24,11 @@ public class Main {
         options.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(options);
-        new WebDriverWait(driver, Duration.ofSeconds(15));
 
         try {
-            login(driver);
+            login(driver, user, pass);
             claimDailyReward(driver);
-
-            playAllDuels(driver);   // 🔥 UPDATED FLOW
+            playAllDuels(driver);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,19 +52,13 @@ public class Main {
             );
 
             if (attackBtn.isEmpty()) {
-                System.out.println("No duels left for this account.");
+                System.out.println("No duels left.");
                 break;
             }
 
             System.out.println("Starting duel #" + (++duelCount));
 
-            try {
-                attackBtn.get(0).click();
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", attackBtn.get(0));
-            }
-
+            click(driver, attackBtn.get(0));
             sleep(2000);
 
             fight(driver);
@@ -78,10 +69,7 @@ public class Main {
     }
 
     // ---------------- LOGIN ----------------
-    private static void login(WebDriver driver) {
-
-        String user = System.getenv("GAME_ID");
-        String pass = System.getenv("GAME_PASSWORD");
+    private static void login(WebDriver driver, String user, String pass) {
 
         driver.get("https://elem.cards/login/");
 
@@ -91,7 +79,10 @@ public class Main {
 
         sleep(4000);
 
-        driver.findElement(By.cssSelector("a.urfin")).click();
+        try {
+            driver.findElement(By.cssSelector("a.urfin")).click();
+        } catch (Exception ignored) {}
+
         sleep(3000);
     }
 
@@ -104,20 +95,11 @@ public class Main {
             );
 
             if (list.isEmpty()) {
-                System.out.println("No daily reward button found.");
+                System.out.println("No daily reward.");
                 return;
             }
 
-            WebElement btn = list.get(0);
-
-            ((JavascriptExecutor) driver)
-                    .executeScript("arguments[0].scrollIntoView({block:'center'});", btn);
-
-            sleep(700);
-
-            ((JavascriptExecutor) driver)
-                    .executeScript("arguments[0].click();", btn);
-
+            click(driver, list.get(0));
             System.out.println("Daily reward claimed ✔");
 
         } catch (Exception e) {
@@ -155,12 +137,7 @@ public class Main {
         );
 
         if (!btn.isEmpty()) {
-            try {
-                btn.get(0).click();
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", btn.get(0));
-            }
+            click(driver, btn.get(0));
             sleep(2000);
         }
     }
@@ -174,9 +151,16 @@ public class Main {
     private static void clickIfPresent(WebDriver driver, String css) {
         List<WebElement> el = driver.findElements(By.cssSelector(css));
         if (!el.isEmpty()) {
-            try {
-                el.get(0).click();
-            } catch (Exception ignored) {}
+            click(driver, el.get(0));
+        }
+    }
+
+    private static void click(WebDriver driver, WebElement el) {
+        try {
+            el.click();
+        } catch (Exception e) {
+            ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].click();", el);
         }
     }
 
