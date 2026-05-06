@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
+
           - id: 2
             GAME_ID: GAME_ID_2
             GAME_PASSWORD: GAME_PASSWORD_2
@@ -19,8 +20,145 @@ jobs:
             GAME_ID: GAME_ID_3
             GAME_PASSWORD: GAME_PASSWORD_3
 
-          # ...
-          # continue up to 39 (exclude account 1)
+          - id: 4
+            GAME_ID: GAME_ID_4
+            GAME_PASSWORD: GAME_PASSWORD_4
+
+          - id: 5
+            GAME_ID: GAME_ID_5
+            GAME_PASSWORD: GAME_PASSWORD_5
+
+          - id: 6
+            GAME_ID: GAME_ID_6
+            GAME_PASSWORD: GAME_PASSWORD_6
+
+          - id: 7
+            GAME_ID: GAME_ID_7
+            GAME_PASSWORD: GAME_PASSWORD_7
+
+          - id: 8
+            GAME_ID: GAME_ID_8
+            GAME_PASSWORD: GAME_PASSWORD_8
+
+          - id: 9
+            GAME_ID: GAME_ID_9
+            GAME_PASSWORD: GAME_PASSWORD_9
+
+          - id: 10
+            GAME_ID: GAME_ID_10
+            GAME_PASSWORD: GAME_PASSWORD_10
+
+          - id: 11
+            GAME_ID: GAME_ID_11
+            GAME_PASSWORD: GAME_PASSWORD_11
+
+          - id: 12
+            GAME_ID: GAME_ID_12
+            GAME_PASSWORD: GAME_PASSWORD_12
+
+          - id: 13
+            GAME_ID: GAME_ID_13
+            GAME_PASSWORD: GAME_PASSWORD_13
+
+          - id: 14
+            GAME_ID: GAME_ID_14
+            GAME_PASSWORD: GAME_PASSWORD_14
+
+          - id: 15
+            GAME_ID: GAME_ID_15
+            GAME_PASSWORD: GAME_PASSWORD_15
+
+          - id: 16
+            GAME_ID: GAME_ID_16
+            GAME_PASSWORD: GAME_PASSWORD_16
+
+          - id: 17
+            GAME_ID: GAME_ID_17
+            GAME_PASSWORD: GAME_PASSWORD_17
+
+          - id: 18
+            GAME_ID: GAME_ID_18
+            GAME_PASSWORD: GAME_PASSWORD_18
+
+          - id: 19
+            GAME_ID: GAME_ID_19
+            GAME_PASSWORD: GAME_PASSWORD_19
+
+          - id: 20
+            GAME_ID: GAME_ID_20
+            GAME_PASSWORD: GAME_PASSWORD_20
+
+          - id: 21
+            GAME_ID: GAME_ID_21
+            GAME_PASSWORD: GAME_PASSWORD_21
+
+          - id: 22
+            GAME_ID: GAME_ID_22
+            GAME_PASSWORD: GAME_PASSWORD_22
+
+          - id: 23
+            GAME_ID: GAME_ID_23
+            GAME_PASSWORD: GAME_PASSWORD_23
+
+          - id: 24
+            GAME_ID: GAME_ID_24
+            GAME_PASSWORD: GAME_PASSWORD_24
+
+          - id: 25
+            GAME_ID: GAME_ID_25
+            GAME_PASSWORD: GAME_PASSWORD_25
+
+          - id: 26
+            GAME_ID: GAME_ID_26
+            GAME_PASSWORD: GAME_PASSWORD_26
+
+          - id: 27
+            GAME_ID: GAME_ID_27
+            GAME_PASSWORD: GAME_PASSWORD_27
+
+          - id: 28
+            GAME_ID: GAME_ID_28
+            GAME_PASSWORD: GAME_PASSWORD_28
+
+          - id: 29
+            GAME_ID: GAME_ID_29
+            GAME_PASSWORD: GAME_PASSWORD_29
+
+          - id: 30
+            GAME_ID: GAME_ID_30
+            GAME_PASSWORD: GAME_PASSWORD_30
+
+          - id: 31
+            GAME_ID: GAME_ID_31
+            GAME_PASSWORD: GAME_PASSWORD_31
+
+          - id: 32
+            GAME_ID: GAME_ID_32
+            GAME_PASSWORD: GAME_PASSWORD_32
+
+          - id: 33
+            GAME_ID: GAME_ID_33
+            GAME_PASSWORD: GAME_PASSWORD_33
+
+          - id: 34
+            GAME_ID: GAME_ID_34
+            GAME_PASSWORD: GAME_PASSWORD_34
+
+          - id: 35
+            GAME_ID: GAME_ID_35
+            GAME_PASSWORD: GAME_PASSWORD_35
+
+          - id: 36
+            GAME_ID: GAME_ID_36
+            GAME_PASSWORD: GAME_PASSWORD_36
+
+          - id: 37
+            GAME_ID: GAME_ID_37
+            GAME_PASSWORD: GAME_PASSWORD_37
+
+          - id: 38
+            GAME_ID: GAME_ID_38
+            GAME_PASSWORD: GAME_PASSWORD_38
 
           - id: 39
             GAME_ID: GAME_ID_39
