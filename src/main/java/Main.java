@@ -36,7 +36,6 @@ public class Main {
 
         try {
 
-            // LOGIN
             driver.get("https://elem.cards/login/");
 
             driver.findElement(By.name("plogin")).sendKeys(user);
@@ -48,10 +47,9 @@ public class Main {
             driver.findElement(By.cssSelector("a.urfin")).click();
             sleep(3000);
 
-            // DAILY REWARD
+            // DAILY REWARD FIXED
             claimDailyReward(driver, wait);
 
-            // DUEL LOOP
             while (!shouldStop(start)) {
 
                 driver.get("https://elem.cards/duel/");
@@ -81,16 +79,18 @@ public class Main {
         }
     }
 
-    // ---------------- DAILY REWARD FIXED ----------------
+    // ---------------- DAILY REWARD (ROBUST FIX) ----------------
     private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
 
         try {
+
             By receiveBtn = By.xpath(
-                    "//a[contains(@href,'/dailyreward') and .//span[contains(.,'Receive')]]"
+                    "//a[contains(@href,'dailyreward') and " +
+                    ".//span[contains(normalize-space(),'Receive')]]"
             );
 
             WebElement btn = wait.until(
-                    ExpectedConditions.elementToBeClickable(receiveBtn)
+                    ExpectedConditions.presenceOfElementLocated(receiveBtn)
             );
 
             ((JavascriptExecutor) driver)
@@ -99,7 +99,7 @@ public class Main {
             sleep(800);
 
             try {
-                btn.click();
+                wait.until(ExpectedConditions.elementToBeClickable(receiveBtn)).click();
                 System.out.println("Daily reward clicked (normal click)");
             } catch (Exception e) {
                 ((JavascriptExecutor) driver)
@@ -140,7 +140,7 @@ public class Main {
     private static void clickAnotherDuel(WebDriver driver) {
 
         List<WebElement> btn = driver.findElements(
-                By.xpath("//span[text()='Another duel']/ancestor::a")
+                By.xpath("//span[contains(text(),'Another duel')]/ancestor::a")
         );
 
         if (!btn.isEmpty()) {
@@ -156,7 +156,7 @@ public class Main {
 
     // ---------------- HELPERS ----------------
     private static boolean isEnemyDead(WebDriver driver) {
-        return !driver.findElements(By.xpath("//span[text()='Another duel']")).isEmpty();
+        return !driver.findElements(By.xpath("//span[contains(text(),'Another duel')]")).isEmpty();
     }
 
     private static void clickIfPresent(WebDriver driver, String css) {
