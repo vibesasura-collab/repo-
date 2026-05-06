@@ -171,5 +171,5 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Run Raid Bot
-        run: mvn exec:java -Dexec.mainClass=RaidBot
+      - name: Build + Run Raid Bot
+        run: mvn -B clean compile exec:java -Dexec.mainClass=RaidBot
