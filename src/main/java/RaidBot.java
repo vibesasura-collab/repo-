@@ -3,6 +3,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
+import java.time.Duration;
 import java.util.List;
 
 public class RaidBot {
@@ -22,7 +23,7 @@ public class RaidBot {
 
             login(driver, user, pass);
 
-            // ---------------- GUILD NAVIGATION ----------------
+            // ---------------- GUILD FLOW ----------------
             driver.get("https://elem.cards/guild/");
             sleep(2000);
 
@@ -37,21 +38,19 @@ public class RaidBot {
 
             System.out.println("Joined raid");
 
-            // ---------------- WAIT FOR RAID START ----------------
+            // ---------------- RAID WAIT LOOP ----------------
             driver.get("https://elem.cards/guild/raids/dragon_fire/");
 
             int tries = 0;
+            boolean started = false;
 
-            while (tries < 60) {
+            while (tries < 60 && !started) {
 
                 sleep(3000);
 
-                List<WebElement> a0 = driver.findElements(By.xpath("//a[contains(@href,'attack0')]"));
-                List<WebElement> a1 = driver.findElements(By.xpath("//a[contains(@href,'attack1')]"));
-                List<WebElement> a2 = driver.findElements(By.xpath("//a[contains(@href,'attack2')]"));
-
-                if (!a0.isEmpty() || !a1.isEmpty() || !a2.isEmpty()) {
+                if (isRaidStarted(driver)) {
                     System.out.println("Raid started!");
+                    started = true;
                     break;
                 }
 
@@ -62,7 +61,12 @@ public class RaidBot {
                 tries++;
             }
 
-            // ---------------- ATTACK ----------------
+            if (!started) {
+                System.out.println("Raid not started in time.");
+                return;
+            }
+
+            // ---------------- ATTACK SEQUENCE ----------------
             attack(driver, 0);
             attack(driver, 1);
             attack(driver, 2);
@@ -93,6 +97,16 @@ public class RaidBot {
         } catch (Exception ignored) {}
     }
 
+    // ---------------- RAID DETECTION ----------------
+    private static boolean isRaidStarted(WebDriver driver) {
+
+        List<WebElement> buttons = driver.findElements(By.xpath(
+                "//a[contains(@href,'attack0') or contains(@href,'attack1') or contains(@href,'attack2')]"
+        ));
+
+        return !buttons.isEmpty();
+    }
+
     // ---------------- ATTACK ----------------
     private static void attack(WebDriver driver, int id) {
 
@@ -102,21 +116,20 @@ public class RaidBot {
                     By.cssSelector("a[href*='attack" + id + "']")
             );
 
-            if (!btn.isEmpty()) {
+            if (btn.isEmpty()) return;
 
-                WebElement el = btn.get(0);
+            WebElement el = btn.get(0);
 
+            ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+
+            sleep(500);
+
+            try {
+                el.click();
+            } catch (Exception e) {
                 ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].scrollIntoView(true);", el);
-
-                sleep(500);
-
-                try {
-                    el.click();
-                } catch (Exception e) {
-                    ((JavascriptExecutor) driver)
-                            .executeScript("arguments[0].click();", el);
-                }
+                        .executeScript("arguments[0].click();", el);
             }
 
         } catch (Exception e) {
@@ -135,7 +148,10 @@ public class RaidBot {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");
 
-        return new ChromeDriver(options);
+        WebDriver driver = new ChromeDriver(options);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+
+        return driver;
     }
 
     // ---------------- SLEEP ----------------
