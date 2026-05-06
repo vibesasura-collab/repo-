@@ -30,11 +30,13 @@ public class Main {
         options.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(options);
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         Instant start = Instant.now();
 
         try {
+
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
             // ---------------- LOGIN ----------------
             driver.get("https://elem.cards/login/");
@@ -81,38 +83,36 @@ public class Main {
         }
     }
 
-    // ---------------- DAILY REWARD (FIXED) ----------------
+    // ---------------- DAILY REWARD (FIXED FOR YOUR UI) ----------------
     private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
 
         try {
-            List<WebElement> btns = wait.until(d ->
-                    d.findElements(By.xpath(
-                            "//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]"
-                    ))
+            By receiveBtn = By.xpath(
+                    "//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]"
             );
 
-            if (!btns.isEmpty()) {
+            WebElement btn = wait.until(
+                    ExpectedConditions.presenceOfElementLocated(receiveBtn)
+            );
 
-                WebElement btn = btns.get(0);
-                System.out.println("Claiming daily reward...");
+            ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].scrollIntoView({block:'center'});", btn);
 
+            sleep(800);
+
+            try {
+                btn.click();
+                System.out.println("Daily reward clicked (normal click)");
+            } catch (Exception e) {
                 ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].scrollIntoView(true);", btn);
-
-                try {
-                    btn.click();
-                } catch (Exception e) {
-                    ((JavascriptExecutor) driver)
-                            .executeScript("arguments[0].click();", btn);
-                }
-
-                sleep(2000);
-            } else {
-                System.out.println("No daily reward available.");
+                        .executeScript("arguments[0].click();", btn);
+                System.out.println("Daily reward clicked (JS click)");
             }
 
+            sleep(2000);
+
         } catch (Exception e) {
-            System.out.println("Daily reward error: " + e.getMessage());
+            System.out.println("Daily reward not available: " + e.getMessage());
         }
     }
 
