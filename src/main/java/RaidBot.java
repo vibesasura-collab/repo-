@@ -9,74 +9,91 @@ public class RaidBot {
 
     public static void main(String[] args) {
 
+        String user = System.getenv("GAME_ID");
+        String pass = System.getenv("GAME_PASSWORD");
+
+        if (user == null || pass == null) {
+            throw new RuntimeException("Missing credentials");
+        }
+
         WebDriver driver = setup();
 
         try {
 
-            login(driver);
+            login(driver, user, pass);
 
+            // ---------------- GUILD NAVIGATION ----------------
             driver.get("https://elem.cards/guild/");
-            sleep(1500);
+            sleep(2000);
 
             driver.get("https://elem.cards/guild/graids/");
-            sleep(1500);
+            sleep(2000);
 
             driver.get("https://elem.cards/guild/raids/");
-            sleep(1500);
+            sleep(2000);
 
             driver.get("https://elem.cards/guild/raids/dragon_fire/join/");
             sleep(3000);
 
             System.out.println("Joined raid");
 
+            // ---------------- WAIT FOR RAID START ----------------
             driver.get("https://elem.cards/guild/raids/dragon_fire/");
 
-            while (true) {
+            int tries = 0;
 
-                sleep(2000);
+            while (tries < 60) {
 
-                List<WebElement> a0 = driver.findElements(By.cssSelector("a[href*='attack0']"));
-                List<WebElement> a1 = driver.findElements(By.cssSelector("a[href*='attack1']"));
-                List<WebElement> a2 = driver.findElements(By.cssSelector("a[href*='attack2']"));
+                sleep(3000);
+
+                List<WebElement> a0 = driver.findElements(By.xpath("//a[contains(@href,'attack0')]"));
+                List<WebElement> a1 = driver.findElements(By.xpath("//a[contains(@href,'attack1')]"));
+                List<WebElement> a2 = driver.findElements(By.xpath("//a[contains(@href,'attack2')]"));
 
                 if (!a0.isEmpty() || !a1.isEmpty() || !a2.isEmpty()) {
-                    System.out.println("Raid started");
+                    System.out.println("Raid started!");
                     break;
                 }
 
-                System.out.println("Waiting for raid...");
+                System.out.println("Raid not started → refreshing...");
                 sleep(10000);
                 driver.navigate().refresh();
+
+                tries++;
             }
 
+            // ---------------- ATTACK ----------------
             attack(driver, 0);
             attack(driver, 1);
             attack(driver, 2);
 
-            System.out.println("Raid complete");
+            System.out.println("Raid completed");
 
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             driver.quit();
         }
     }
 
-    private static void login(WebDriver driver) {
+    // ---------------- LOGIN ----------------
+    private static void login(WebDriver driver, String user, String pass) {
 
         driver.get("https://elem.cards/login/");
 
-        driver.findElement(By.name("plogin"))
-                .sendKeys(System.getenv("GAME_ID"));
-
-        driver.findElement(By.name("ppass"))
-                .sendKeys(System.getenv("GAME_PASSWORD"));
-
+        driver.findElement(By.name("plogin")).sendKeys(user);
+        driver.findElement(By.name("ppass")).sendKeys(pass);
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(4000);
+
+        try {
+            driver.findElement(By.cssSelector("a.urfin")).click();
+            sleep(2000);
+        } catch (Exception ignored) {}
     }
 
+    // ---------------- ATTACK ----------------
     private static void attack(WebDriver driver, int id) {
 
         try {
@@ -86,15 +103,28 @@ public class RaidBot {
             );
 
             if (!btn.isEmpty()) {
+
+                WebElement el = btn.get(0);
+
                 ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", btn.get(0));
+                        .executeScript("arguments[0].scrollIntoView(true);", el);
+
+                sleep(500);
+
+                try {
+                    el.click();
+                } catch (Exception e) {
+                    ((JavascriptExecutor) driver)
+                            .executeScript("arguments[0].click();", el);
+                }
             }
 
-            sleep(800);
-
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.out.println("Attack error: " + e.getMessage());
+        }
     }
 
+    // ---------------- SETUP ----------------
     private static WebDriver setup() {
 
         WebDriverManager.chromedriver().setup();
@@ -103,10 +133,12 @@ public class RaidBot {
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu");
 
         return new ChromeDriver(options);
     }
 
+    // ---------------- SLEEP ----------------
     private static void sleep(int ms) {
         try {
             Thread.sleep(ms);
