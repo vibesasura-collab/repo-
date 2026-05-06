@@ -36,22 +36,10 @@ public class Main {
 
         try {
 
-            // LOGIN
-            driver.get("https://elem.cards/login/");
+            login(driver);
 
-            driver.findElement(By.name("plogin")).sendKeys(user);
-            driver.findElement(By.name("ppass")).sendKeys(pass);
-            driver.findElement(By.cssSelector("input[type='submit']")).click();
-
-            sleep(4000);
-
-            driver.findElement(By.cssSelector("a.urfin")).click();
-            sleep(3000);
-
-            // DAILY REWARD
             claimDailyReward(driver, wait);
 
-            // DUEL LOOP
             while (!shouldStop(start)) {
 
                 driver.get("https://elem.cards/duel/");
@@ -81,7 +69,25 @@ public class Main {
         }
     }
 
-    // ---------------- DAILY REWARD FIXED ----------------
+    // ---------------- LOGIN ----------------
+    private static void login(WebDriver driver) {
+
+        String user = System.getenv("GAME_ID");
+        String pass = System.getenv("GAME_PASSWORD");
+
+        driver.get("https://elem.cards/login/");
+
+        driver.findElement(By.name("plogin")).sendKeys(user);
+        driver.findElement(By.name("ppass")).sendKeys(pass);
+        driver.findElement(By.cssSelector("input[type='submit']")).click();
+
+        sleep(4000);
+
+        driver.findElement(By.cssSelector("a.urfin")).click();
+        sleep(3000);
+    }
+
+    // ---------------- DAILY REWARD FIX ----------------
     private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
 
         try {
@@ -91,7 +97,7 @@ public class Main {
             );
 
             WebElement btn = wait.until(
-                    ExpectedConditions.elementToBeClickable(locator)
+                    ExpectedConditions.presenceOfElementLocated(locator)
             );
 
             ((JavascriptExecutor) driver)
@@ -101,17 +107,15 @@ public class Main {
 
             try {
                 btn.click();
-                System.out.println("Daily reward clicked (normal)");
+                System.out.println("Receive clicked normally");
             } catch (Exception e) {
                 ((JavascriptExecutor) driver)
                         .executeScript("arguments[0].click();", btn);
-                System.out.println("Daily reward clicked (JS)");
+                System.out.println("Receive clicked via JS");
             }
 
-            sleep(2000);
-
         } catch (Exception e) {
-            System.out.println("Daily reward not available / already claimed");
+            System.out.println("Receive not available or already claimed");
         }
     }
 
