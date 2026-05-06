@@ -1,4 +1,4 @@
-name: Game Bot
+name: Duel Bot
 
 on:
   schedule:
@@ -6,170 +6,132 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-bot:
+  run-duel:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     strategy:
+      fail-fast: false
+      max-parallel: 10
       matrix:
         include:
           - id: 1
             game_id_secret: GAME_ID_1
             game_password_secret: GAME_PASSWORD_1
-
           - id: 2
             game_id_secret: GAME_ID_2
             game_password_secret: GAME_PASSWORD_2
-
           - id: 3
             game_id_secret: GAME_ID_3
             game_password_secret: GAME_PASSWORD_3
-
           - id: 4
             game_id_secret: GAME_ID_4
             game_password_secret: GAME_PASSWORD_4
-
           - id: 5
             game_id_secret: GAME_ID_5
             game_password_secret: GAME_PASSWORD_5
-
           - id: 6
             game_id_secret: GAME_ID_6
             game_password_secret: GAME_PASSWORD_6
-
           - id: 7
             game_id_secret: GAME_ID_7
             game_password_secret: GAME_PASSWORD_7
-
           - id: 8
             game_id_secret: GAME_ID_8
             game_password_secret: GAME_PASSWORD_8
-
           - id: 9
             game_id_secret: GAME_ID_9
             game_password_secret: GAME_PASSWORD_9
-
           - id: 10
             game_id_secret: GAME_ID_10
             game_password_secret: GAME_PASSWORD_10
-
           - id: 11
             game_id_secret: GAME_ID_11
             game_password_secret: GAME_PASSWORD_11
-
           - id: 12
             game_id_secret: GAME_ID_12
             game_password_secret: GAME_PASSWORD_12
-
           - id: 13
             game_id_secret: GAME_ID_13
             game_password_secret: GAME_PASSWORD_13
-
           - id: 14
             game_id_secret: GAME_ID_14
             game_password_secret: GAME_PASSWORD_14
-
           - id: 15
             game_id_secret: GAME_ID_15
             game_password_secret: GAME_PASSWORD_15
-
           - id: 16
             game_id_secret: GAME_ID_16
             game_password_secret: GAME_PASSWORD_16
-
           - id: 17
             game_id_secret: GAME_ID_17
             game_password_secret: GAME_PASSWORD_17
-
           - id: 18
             game_id_secret: GAME_ID_18
             game_password_secret: GAME_PASSWORD_18
-
           - id: 19
             game_id_secret: GAME_ID_19
             game_password_secret: GAME_PASSWORD_19
-
           - id: 20
             game_id_secret: GAME_ID_20
             game_password_secret: GAME_PASSWORD_20
-
           - id: 21
             game_id_secret: GAME_ID_21
             game_password_secret: GAME_PASSWORD_21
-
           - id: 22
             game_id_secret: GAME_ID_22
             game_password_secret: GAME_PASSWORD_22
-
           - id: 23
             game_id_secret: GAME_ID_23
             game_password_secret: GAME_PASSWORD_23
-
           - id: 24
             game_id_secret: GAME_ID_24
             game_password_secret: GAME_PASSWORD_24
-
           - id: 25
             game_id_secret: GAME_ID_25
             game_password_secret: GAME_PASSWORD_25
-
           - id: 26
             game_id_secret: GAME_ID_26
             game_password_secret: GAME_PASSWORD_26
-
           - id: 27
             game_id_secret: GAME_ID_27
             game_password_secret: GAME_PASSWORD_27
-
           - id: 28
             game_id_secret: GAME_ID_28
             game_password_secret: GAME_PASSWORD_28
-
           - id: 29
             game_id_secret: GAME_ID_29
             game_password_secret: GAME_PASSWORD_29
-
           - id: 30
             game_id_secret: GAME_ID_30
             game_password_secret: GAME_PASSWORD_30
-
           - id: 31
             game_id_secret: GAME_ID_31
             game_password_secret: GAME_PASSWORD_31
-
           - id: 32
             game_id_secret: GAME_ID_32
             game_password_secret: GAME_PASSWORD_32
-
           - id: 33
             game_id_secret: GAME_ID_33
             game_password_secret: GAME_PASSWORD_33
-
           - id: 34
             game_id_secret: GAME_ID_34
             game_password_secret: GAME_PASSWORD_34
-
           - id: 35
             game_id_secret: GAME_ID_35
             game_password_secret: GAME_PASSWORD_35
-
           - id: 36
             game_id_secret: GAME_ID_36
             game_password_secret: GAME_PASSWORD_36
-
           - id: 37
             game_id_secret: GAME_ID_37
             game_password_secret: GAME_PASSWORD_37
-
           - id: 38
             game_id_secret: GAME_ID_38
             game_password_secret: GAME_PASSWORD_38
-
           - id: 39
             game_id_secret: GAME_ID_39
             game_password_secret: GAME_PASSWORD_39
-
-         
 
     steps:
       - name: Checkout
@@ -181,11 +143,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build project
-        run: mvn clean package -DskipTests
+      - name: Build Project
+        run: mvn -B clean compile
 
-      - name: Run Bot
-
+      - name: Run Duel Bot
         env:
           GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
           GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
+        run: mvn -B exec:java -Dexec.mainClass=Main
