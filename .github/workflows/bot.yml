@@ -185,7 +185,7 @@ jobs:
         run: mvn clean package -DskipTests
 
       - name: Run Bot
-        run: java -jar target/game-bot-1.0-jar-with-dependencies.jar
+
         env:
           GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
           GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
