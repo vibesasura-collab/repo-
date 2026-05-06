@@ -1,9 +1,12 @@
 name: Duel Bot
 
 on:
-  schedule:
-    - cron: "0 */2 * * *"
   workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "Type RUN to start duel bot"
+        required: true
+        default: "RUN"
 
 jobs:
   run-duel:
@@ -136,6 +139,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate manual trigger
+        run: |
+          echo "Mode: ${{ github.event.inputs.run_mode }}"
+          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+            echo "Not authorized run. Exiting."
+            exit 1
+          fi
 
       - name: Set up Java
         uses: actions/setup-java@v4
