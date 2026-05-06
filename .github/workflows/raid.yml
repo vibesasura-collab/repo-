@@ -1,0 +1,58 @@
+name: Guild Raid Manual Mode
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  join-raid:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - id: 2
+            GAME_ID: GAME_ID_2
+            GAME_PASSWORD: GAME_PASSWORD_2
+
+          - id: 3
+            GAME_ID: GAME_ID_3
+            GAME_PASSWORD: GAME_PASSWORD_3
+
+          # ...
+          # continue up to 39 (exclude account 1)
+
+          - id: 39
+            GAME_ID: GAME_ID_39
+            GAME_PASSWORD: GAME_PASSWORD_39
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run Join Phase
+        run: mvn -Dphase=join exec:java
+
+
+  attack-raid:
+    needs: join-raid
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run Attack Phase
+        run: mvn -Dphase=attack exec:java
