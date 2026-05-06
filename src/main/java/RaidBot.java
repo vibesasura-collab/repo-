@@ -33,13 +33,13 @@ public class RaidBot {
             driver.get("https://elem.cards/guild/raids/");
             sleep(2000);
 
-            driver.get("https://elem.cards/guild/raids/dragon_fire/join/");
+            driver.get("https://elem.cards/guild/raids/dragon_air/join/");
             sleep(3000);
 
             System.out.println("Joined raid");
 
             // ---------------- RAID PAGE ----------------
-            driver.get("https://elem.cards/guild/raids/dragon_fire/");
+            driver.get("https://elem.cards/guild/raids/dragon_air/");
 
             int tries = 0;
             boolean started = false;
