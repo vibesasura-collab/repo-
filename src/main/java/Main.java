@@ -1,8 +1,8 @@
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
@@ -30,14 +30,14 @@ public class Main {
         options.addArguments("--disable-dev-shm-usage");
 
         WebDriver driver = new ChromeDriver(options);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
         Instant start = Instant.now();
 
         try {
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
             // ---------------- LOGIN ----------------
             driver.get("https://elem.cards/login/");
-            sleep(2000);
 
             driver.findElement(By.name("plogin")).sendKeys(user);
             driver.findElement(By.name("ppass")).sendKeys(pass);
@@ -49,7 +49,7 @@ public class Main {
             sleep(3000);
 
             // ---------------- DAILY REWARD ----------------
-            claimDailyReward(driver);
+            claimDailyReward(driver, wait);
 
             // ---------------- DUEL LOOP ----------------
             while (!shouldStop(start)) {
@@ -81,21 +81,44 @@ public class Main {
         }
     }
 
-    // ---------------- DAILY REWARD ----------------
-    private static void claimDailyReward(WebDriver driver) {
-        List<WebElement> btn = driver.findElements(
-                By.xpath("//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]")
-        );
+    // ---------------- DAILY REWARD (FIXED) ----------------
+    private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
 
-        if (!btn.isEmpty()) {
-            System.out.println("Claiming daily reward...");
-            btn.get(0).click();
-            sleep(2000);
+        try {
+            List<WebElement> btns = wait.until(d ->
+                    d.findElements(By.xpath(
+                            "//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]"
+                    ))
+            );
+
+            if (!btns.isEmpty()) {
+
+                WebElement btn = btns.get(0);
+                System.out.println("Claiming daily reward...");
+
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].scrollIntoView(true);", btn);
+
+                try {
+                    btn.click();
+                } catch (Exception e) {
+                    ((JavascriptExecutor) driver)
+                            .executeScript("arguments[0].click();", btn);
+                }
+
+                sleep(2000);
+            } else {
+                System.out.println("No daily reward available.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Daily reward error: " + e.getMessage());
         }
     }
 
     // ---------------- FIGHT ----------------
     private static void fight(WebDriver driver) {
+
         int rounds = 0;
 
         while (rounds < 50) {
@@ -117,6 +140,7 @@ public class Main {
 
     // ---------------- NEXT DUEL ----------------
     private static void clickAnotherDuel(WebDriver driver) {
+
         List<WebElement> btn = driver.findElements(
                 By.xpath("//span[text()='Another duel']/ancestor::a")
         );
@@ -135,12 +159,14 @@ public class Main {
     private static void clickIfPresent(WebDriver driver, String css) {
         List<WebElement> el = driver.findElements(By.cssSelector(css));
         if (!el.isEmpty()) {
-            try { el.get(0).click(); } catch (Exception ignored) {}
+            try {
+                el.get(0).click();
+            } catch (Exception ignored) {}
         }
     }
 
     private static boolean shouldStop(Instant start) {
-        return java.time.Duration.between(start, Instant.now()).toMinutes() >= MAX_RUN_MINUTES;
+        return Duration.between(start, Instant.now()).toMinutes() >= MAX_RUN_MINUTES;
     }
 
     private static void sleep(int ms) {
