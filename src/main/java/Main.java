@@ -2,7 +2,6 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
@@ -38,7 +37,7 @@ public class Main {
 
             login(driver);
 
-            claimDailyReward(driver, wait);
+            claimDailyReward(driver);
 
             while (!shouldStop(start)) {
 
@@ -87,35 +86,34 @@ public class Main {
         sleep(3000);
     }
 
-    // ---------------- DAILY REWARD FIX ----------------
-    private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
+    // ---------------- DAILY REWARD (FIXED CORE) ----------------
+    private static void claimDailyReward(WebDriver driver) {
 
         try {
 
-            By locator = By.xpath(
-                    "//a[contains(@href,'dailyreward') and .//span[contains(.,'Receive')]]"
+            List<WebElement> list = driver.findElements(
+                    By.xpath("//a[contains(@href,'/dailyreward/')]")
             );
 
-            WebElement btn = wait.until(
-                    ExpectedConditions.presenceOfElementLocated(locator)
-            );
+            if (list.isEmpty()) {
+                System.out.println("No daily reward button found.");
+                return;
+            }
+
+            WebElement btn = list.get(0);
 
             ((JavascriptExecutor) driver)
                     .executeScript("arguments[0].scrollIntoView({block:'center'});", btn);
 
             sleep(700);
 
-            try {
-                btn.click();
-                System.out.println("Receive clicked normally");
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", btn);
-                System.out.println("Receive clicked via JS");
-            }
+            ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].click();", btn);
+
+            System.out.println("Daily reward clicked");
 
         } catch (Exception e) {
-            System.out.println("Receive not available or already claimed");
+            System.out.println("Daily reward click failed: " + e.getMessage());
         }
     }
 
