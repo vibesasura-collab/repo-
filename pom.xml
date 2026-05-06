@@ -4,11 +4,14 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>bot</groupId>
     <artifactId>game-bot</artifactId>
     <version>1.0</version>
 
+    <!-- Dependencies -->
     <dependencies>
+
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
@@ -20,10 +23,14 @@
             <artifactId>webdrivermanager</artifactId>
             <version>5.8.0</version>
         </dependency>
+
     </dependencies>
 
+    <!-- Build Section -->
     <build>
         <plugins>
+
+            <!-- Assembly plugin (your existing JAR builder) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -32,9 +39,10 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>RaidBot</mainClass>
                         </manifest>
                     </archive>
+
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -50,6 +58,14 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ✅ FIX: This enables mvn exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>maven-exec-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+
         </plugins>
     </build>
 
