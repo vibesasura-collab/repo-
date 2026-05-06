@@ -38,7 +38,7 @@ public class RaidBot {
 
             System.out.println("Joined raid");
 
-            // ---------------- RAID WAIT LOOP ----------------
+            // ---------------- RAID PAGE ----------------
             driver.get("https://elem.cards/guild/raids/dragon_fire/");
 
             int tries = 0;
@@ -66,10 +66,22 @@ public class RaidBot {
                 return;
             }
 
-            // ---------------- ATTACK SEQUENCE ----------------
-            attack(driver, 0);
-            attack(driver, 1);
-            attack(driver, 2);
+            // ---------------- CONTINUOUS ATTACK LOOP ----------------
+            while (true) {
+
+                boolean didAttack = false;
+
+                didAttack |= attackOnce(driver, 0);
+                didAttack |= attackOnce(driver, 1);
+                didAttack |= attackOnce(driver, 2);
+
+                if (!didAttack) {
+                    System.out.println("Raid finished (no attack buttons left)");
+                    break;
+                }
+
+                sleep(1200);
+            }
 
             System.out.println("Raid completed");
 
@@ -107,8 +119,8 @@ public class RaidBot {
         return !buttons.isEmpty();
     }
 
-    // ---------------- ATTACK ----------------
-    private static void attack(WebDriver driver, int id) {
+    // ---------------- ATTACK (FIXED) ----------------
+    private static boolean attackOnce(WebDriver driver, int id) {
 
         try {
 
@@ -116,14 +128,14 @@ public class RaidBot {
                     By.cssSelector("a[href*='attack" + id + "']")
             );
 
-            if (btn.isEmpty()) return;
+            if (btn.isEmpty()) return false;
 
             WebElement el = btn.get(0);
 
             ((JavascriptExecutor) driver)
                     .executeScript("arguments[0].scrollIntoView({block:'center'});", el);
 
-            sleep(500);
+            sleep(400);
 
             try {
                 el.click();
@@ -132,8 +144,10 @@ public class RaidBot {
                         .executeScript("arguments[0].click();", el);
             }
 
+            return true;
+
         } catch (Exception e) {
-            System.out.println("Attack error: " + e.getMessage());
+            return false;
         }
     }
 
