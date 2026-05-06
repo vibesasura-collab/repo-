@@ -36,9 +36,7 @@ public class Main {
 
         try {
 
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-
-            // ---------------- LOGIN ----------------
+            // LOGIN
             driver.get("https://elem.cards/login/");
 
             driver.findElement(By.name("plogin")).sendKeys(user);
@@ -50,10 +48,10 @@ public class Main {
             driver.findElement(By.cssSelector("a.urfin")).click();
             sleep(3000);
 
-            // ---------------- DAILY REWARD ----------------
+            // DAILY REWARD
             claimDailyReward(driver, wait);
 
-            // ---------------- DUEL LOOP ----------------
+            // DUEL LOOP
             while (!shouldStop(start)) {
 
                 driver.get("https://elem.cards/duel/");
@@ -83,16 +81,16 @@ public class Main {
         }
     }
 
-    // ---------------- DAILY REWARD (FIXED FOR YOUR UI) ----------------
+    // ---------------- DAILY REWARD FIXED ----------------
     private static void claimDailyReward(WebDriver driver, WebDriverWait wait) {
 
         try {
             By receiveBtn = By.xpath(
-                    "//a[contains(@href,'/dailyreward') and .//span[text()='Receive']]"
+                    "//a[contains(@href,'/dailyreward') and .//span[contains(.,'Receive')]]"
             );
 
             WebElement btn = wait.until(
-                    ExpectedConditions.presenceOfElementLocated(receiveBtn)
+                    ExpectedConditions.elementToBeClickable(receiveBtn)
             );
 
             ((JavascriptExecutor) driver)
@@ -146,7 +144,12 @@ public class Main {
         );
 
         if (!btn.isEmpty()) {
-            btn.get(0).click();
+            try {
+                btn.get(0).click();
+            } catch (Exception e) {
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", btn.get(0));
+            }
             sleep(2000);
         }
     }
@@ -170,6 +173,8 @@ public class Main {
     }
 
     private static void sleep(int ms) {
-        try { Thread.sleep(ms); } catch (Exception ignored) {}
+        try {
+            Thread.sleep(ms);
+        } catch (Exception ignored) {}
     }
 }
