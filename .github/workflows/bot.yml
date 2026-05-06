@@ -169,49 +169,7 @@ jobs:
             game_id_secret: GAME_ID_39
             game_password_secret: GAME_PASSWORD_39
 
-          - id: 40
-            game_id_secret: GAME_ID_40
-            game_password_secret: GAME_PASSWORD_40
-
-          - id: 41
-            game_id_secret: GAME_ID_41
-            game_password_secret: GAME_PASSWORD_41
-
-          - id: 42
-            game_id_secret: GAME_ID_42
-            game_password_secret: GAME_PASSWORD_42
-
-          - id: 43
-            game_id_secret: GAME_ID_43
-            game_password_secret: GAME_PASSWORD_43
-
-          - id: 44
-            game_id_secret: GAME_ID_44
-            game_password_secret: GAME_PASSWORD_44
-
-          - id: 45
-            game_id_secret: GAME_ID_45
-            game_password_secret: GAME_PASSWORD_45
-
-          - id: 46
-            game_id_secret: GAME_ID_46
-            game_password_secret: GAME_PASSWORD_46
-
-          - id: 47
-            game_id_secret: GAME_ID_47
-            game_password_secret: GAME_PASSWORD_47
-
-          - id: 48
-            game_id_secret: GAME_ID_48
-            game_password_secret: GAME_PASSWORD_48
-
-          - id: 49
-            game_id_secret: GAME_ID_49
-            game_password_secret: GAME_PASSWORD_49
-
-          - id: 50
-            game_id_secret: GAME_ID_50
-            game_password_secret: GAME_PASSWORD_50
+         
 
     steps:
       - name: Checkout
