@@ -90,8 +90,13 @@ public class Main {
     private static void claimDailyReward(WebDriver driver) {
 
         try {
+
+            driver.get("https://elem.cards/dailyreward/");
+
+            sleep(3000);
+
             List<WebElement> list = driver.findElements(
-                    By.xpath("//a[contains(@href,'/dailyreward/')]")
+                    By.xpath("//a[contains(@href,'/dailyreward/tnx/')]")
             );
 
             if (list.isEmpty()) {
@@ -100,6 +105,7 @@ public class Main {
             }
 
             click(driver, list.get(0));
+
             System.out.println("Daily reward claimed ✔");
 
         } catch (Exception e) {
