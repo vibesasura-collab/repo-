@@ -34,7 +34,7 @@ public class aa {
 
             login(user, pass);
 
-            playDungeon();   // 🔥 ONLY FEATURE
+            playDungeon();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,7 +44,7 @@ public class aa {
         }
     }
 
-    // ---------------- LOGIN ONLY ----------------
+    // ---------------- LOGIN ----------------
 
     private static void login(String user, String pass) {
 
@@ -60,19 +60,20 @@ public class aa {
         System.out.println("Login successful ✔");
     }
 
-    // ---------------- DUNGEON MODE ----------------
+    // ---------------- DUNGEON BOT ----------------
 
     private static void playDungeon() {
 
-        int stage = 1;
-
-        while (true) {
+        for (int stage = 1; stage <= 3; stage++) {
 
             System.out.println("==================================");
-            System.out.println("Dungeon Stage: " + stage);
+            System.out.println("Starting Stage: " + stage);
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
-            sleep(3000);
+
+            sleep(4000);
+
+            int idleChecks = 0;
 
             while (true) {
 
@@ -81,10 +82,28 @@ public class aa {
                 );
 
                 if (attacks.isEmpty()) {
-                    break;
+
+                    idleChecks++;
+
+                    sleep(1000);
+
+                    if (idleChecks >= 5) {
+                        break;
+                    }
+
+                    continue;
                 }
 
-                click(attacks.get(0));
+                idleChecks = 0;
+
+                System.out.println("Attacking... remaining: " + attacks.size());
+
+                try {
+                    click(attacks.get(0));
+                } catch (Exception e) {
+                    System.out.println("Click failed, retrying...");
+                }
+
                 sleep(2000);
             }
 
@@ -92,18 +111,12 @@ public class aa {
 
             driver.get("https://elem.cards/dungeon/");
             sleep(2000);
-
-            stage++;
-
-            // safety limit (remove if you want infinite farming)
-            if (stage > 20) {
-                System.out.println("Dungeon run finished ✔");
-                break;
-            }
         }
+
+        System.out.println("Dungeon completed ✔");
     }
 
-    // ---------------- HELPERS ----------------
+    // ---------------- CLICK HELPER ----------------
 
     private static void click(WebElement el) {
 
@@ -114,6 +127,8 @@ public class aa {
                     .executeScript("arguments[0].click();", el);
         }
     }
+
+    // ---------------- SLEEP ----------------
 
     private static void sleep(int ms) {
         try {
