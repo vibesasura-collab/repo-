@@ -21,7 +21,6 @@ public class RewardBot {
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
-
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
@@ -34,13 +33,12 @@ public class RewardBot {
 
             login(user, pass);
 
-            openMainPage();
+            openMain();
+            openDaily();
 
-            openDailyPage();
+            runRewards();
 
-            runRewardMode();
-
-            System.out.println("Reward Mode Completed ✔");
+            System.out.println("All Rewards Completed ✔");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,65 +64,69 @@ public class RewardBot {
         System.out.println("Login successful ✔");
     }
 
-    // ---------------- MAIN PAGE ----------------
+    // ---------------- NAVIGATION ----------------
 
-    private static void openMainPage() {
+    private static void openMain() {
 
-        driver.findElement(By.cssSelector("a[href='/']")).click();
-        sleep(3000);
-
-        System.out.println("Main Page opened ✔");
-    }
-
-    // ---------------- DAILY PAGE ----------------
-
-    private static void openDailyPage() {
-
-        driver.findElement(By.cssSelector("a[href='/daily/']")).click();
-        sleep(3000);
-
-        System.out.println("Daily Page opened ✔");
-    }
-
-    // ---------------- REWARD MODE ----------------
-
-    private static void runRewardMode() {
-
-        System.out.println("Checking Rewards...");
-
-        clickOnce("/daily/reward/win_duels/");
-        clickOnce("/daily/reward/duels/");
-        clickOnce("/daily/reward/arenas/");
-        clickOnce("/daily/reward/get_dungeon_cards/");
-        clickOnce("/daily/reward/win_arenas/");
-        clickOnce("/daily/reward/win_arenas/");
-
-        System.out.println("All Rewards Checked ✔");
-    }
-
-    // ---------------- SAFE CLICK ----------------
-
-    private static void clickOnce(String path) {
-
-        List<WebElement> el = driver.findElements(
-                By.cssSelector("a[href='" + path + "']")
-        );
-
+        List<WebElement> el = driver.findElements(By.cssSelector("a[href='/']"));
         if (!el.isEmpty()) {
+            el.get(0).click();
+        }
 
-            try {
-                el.get(0).click();
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", el.get(0));
+        sleep(2000);
+    }
+
+    private static void openDaily() {
+
+        List<WebElement> el = driver.findElements(By.cssSelector("a[href='/daily/']"));
+        if (!el.isEmpty()) {
+            el.get(0).click();
+        }
+
+        sleep(3000);
+    }
+
+    // ---------------- REWARDS ----------------
+
+    private static void runRewards() {
+
+        clickReward("win_duels");
+        clickReward("duels");
+        clickReward("arenas");
+        clickReward("get_dungeon_cards");
+        clickReward("win_arenas");
+        clickReward("improve_cards"); // ✅ FIXED ONE (your issue)
+
+    }
+
+    // ---------------- FIXED SAFE CLICK ----------------
+
+    private static void clickReward(String path) {
+
+        for (int i = 0; i < 8; i++) {
+
+            List<WebElement> el = driver.findElements(
+                    By.cssSelector("a[href*='" + path + "']")
+            );
+
+            if (!el.isEmpty()) {
+
+                try {
+                    el.get(0).click();
+                } catch (Exception e) {
+                    ((JavascriptExecutor) driver)
+                            .executeScript("arguments[0].click();", el.get(0));
+                }
+
+                System.out.println("Clicked reward ✔: " + path);
+                sleep(2000);
+                return;
             }
 
-            sleep(2000);
-            System.out.println("Clicked: " + path);
-
-        } else {
-            System.out.println("Not found: " + path);
+            sleep(1000);
         }
+
+        System.out.println("Skipped (not found): " + path);
     }
 
     // ---------------- SLEEP ----------------
