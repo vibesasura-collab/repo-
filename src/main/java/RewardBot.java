@@ -5,7 +5,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.util.List;
 
-public class final {
+public class RewardBot {
 
     private static WebDriver driver;
 
@@ -102,7 +102,7 @@ public class final {
         System.out.println("All Rewards Checked ✔");
     }
 
-    // ---------------- CLICK ONCE IF PRESENT ----------------
+    // ---------------- SAFE CLICK ----------------
 
     private static void clickOnce(String path) {
 
@@ -120,7 +120,6 @@ public class final {
             }
 
             sleep(2000);
-
             System.out.println("Clicked: " + path);
 
         } else {
