@@ -5,7 +5,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.util.List;
 
-public class aa {
+public class Main {
 
     private static WebDriver driver;
 
@@ -34,12 +34,20 @@ public class aa {
 
             login(user, pass);
 
-            playDungeon();
+            claimDailyReward();
+
+            playAllDuels();
 
         } catch (Exception e) {
+
             e.printStackTrace();
+
         } finally {
-            if (driver != null) driver.quit();
+
+            if (driver != null) {
+                driver.quit();
+            }
+
             System.exit(0);
         }
     }
@@ -49,10 +57,13 @@ public class aa {
     private static void login(String user, String pass) {
 
         driver.get("https://elem.cards/login/");
+
         sleep(3000);
 
         driver.findElement(By.name("plogin")).sendKeys(user);
+
         driver.findElement(By.name("ppass")).sendKeys(pass);
+
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(5000);
@@ -60,79 +71,179 @@ public class aa {
         System.out.println("Login successful ✔");
     }
 
-    // ---------------- DUNGEON BOT ----------------
+    // ---------------- DAILY REWARD ----------------
 
-    private static void playDungeon() {
+    private static void claimDailyReward() {
 
-        for (int stage = 1; stage <= 3; stage++) {
+        try {
 
-            System.out.println("==================================");
-            System.out.println("Starting Stage: " + stage);
+            // Open main page
+            driver.get("https://elem.cards/");
 
-            driver.get("https://elem.cards/dungeon/" + stage + "/start/");
+            sleep(3000);
 
-            sleep(4000);
+            // Open reward page
+            driver.get("https://elem.cards/dailyreward/");
 
-            int idleChecks = 0;
+            sleep(2000);
 
-            while (true) {
+            List<WebElement> rewards = driver.findElements(
+                    By.cssSelector("a[href*='/dailyreward/tnx/']")
+            );
 
-                List<WebElement> attacks = driver.findElements(
-                        By.cssSelector("a[href*='/dungeon/attack']")
-                );
+            if (rewards.isEmpty()) {
 
-                if (attacks.isEmpty()) {
+                System.out.println("No daily reward available.");
 
-                    idleChecks++;
-
-                    sleep(1000);
-
-                    if (idleChecks >= 5) {
-                        break;
-                    }
-
-                    continue;
-                }
-
-                idleChecks = 0;
-
-                System.out.println("Attacking... remaining: " + attacks.size());
-
-                try {
-                    click(attacks.get(0));
-                } catch (Exception e) {
-                    System.out.println("Click failed, retrying...");
-                }
-
-                sleep(2000);
+                return;
             }
 
-            System.out.println("Stage " + stage + " cleared ✔");
+            String rewardUrl =
+                    rewards.get(0).getAttribute("href");
 
-            driver.get("https://elem.cards/dungeon/");
-            sleep(2000);
+            System.out.println("Opening reward: " + rewardUrl);
+
+            driver.get(rewardUrl);
+
+            sleep(3000);
+
+            System.out.println("Daily reward claimed ✔");
+
+        } catch (Exception e) {
+
+            System.out.println("Daily reward failed.");
+
+            e.printStackTrace();
         }
-
-        System.out.println("Dungeon completed ✔");
     }
 
-    // ---------------- CLICK HELPER ----------------
+    // ---------------- PLAY ALL DUELS ----------------
+
+    private static void playAllDuels() {
+
+        int duelCount = 0;
+
+        while (true) {
+
+            driver.get("https://elem.cards/duel/");
+
+            sleep(2000);
+
+            List<WebElement> attackBtn = driver.findElements(
+                    By.xpath("//a[contains(@href,'/duel/tobattle/')]")
+            );
+
+            if (attackBtn.isEmpty()) {
+
+                System.out.println("No duels left.");
+
+                break;
+            }
+
+            duelCount++;
+
+            System.out.println("Starting duel #" + duelCount);
+
+            click(attackBtn.get(0));
+
+            sleep(2000);
+
+            fight();
+
+            clickAnotherDuel();
+        }
+
+        System.out.println("All duels completed ✔");
+    }
+
+    // ---------------- FIGHT ----------------
+
+    private static void fight() {
+
+        int rounds = 0;
+
+        while (rounds < 50) {
+
+            if (isEnemyDead()) {
+
+                break;
+            }
+
+            clickIfPresent("a[href*='attack0']");
+            sleep(700);
+
+            clickIfPresent("a[href*='attack1']");
+            sleep(700);
+
+            clickIfPresent("a[href*='attack2']");
+            sleep(700);
+
+            rounds++;
+        }
+
+        System.out.println("Fight completed ✔");
+    }
+
+    // ---------------- NEXT DUEL ----------------
+
+    private static void clickAnotherDuel() {
+
+        List<WebElement> btn = driver.findElements(
+                By.xpath("//span[contains(text(),'Another duel')]/ancestor::a")
+        );
+
+        if (!btn.isEmpty()) {
+
+            click(btn.get(0));
+
+            sleep(2000);
+        }
+    }
+
+    // ---------------- HELPERS ----------------
+
+    private static boolean isEnemyDead() {
+
+        return !driver.findElements(
+                By.xpath("//span[contains(text(),'Another duel')]")
+        ).isEmpty();
+    }
+
+    private static void clickIfPresent(String css) {
+
+        List<WebElement> el = driver.findElements(
+                By.cssSelector(css)
+        );
+
+        if (!el.isEmpty()) {
+
+            click(el.get(0));
+        }
+    }
 
     private static void click(WebElement el) {
 
         try {
+
             el.click();
+
         } catch (Exception e) {
-            ((JavascriptExecutor) driver)
-                    .executeScript("arguments[0].click();", el);
+
+            try {
+
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", el);
+
+            } catch (Exception ignored) {}
         }
     }
 
-    // ---------------- SLEEP ----------------
-
     private static void sleep(int ms) {
+
         try {
+
             Thread.sleep(ms);
+
         } catch (Exception ignored) {}
     }
 }
