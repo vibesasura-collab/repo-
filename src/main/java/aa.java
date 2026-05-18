@@ -14,12 +14,18 @@ public class aa {
         String user = System.getenv("GAME_ID");
         String pass = System.getenv("GAME_PASSWORD");
 
+        if (user == null || pass == null) {
+            throw new RuntimeException("Missing credentials");
+        }
+
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
+
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu");
         options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
@@ -29,8 +35,11 @@ public class aa {
             login(user, pass);
             playDungeon();
 
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
-            driver.quit();
+            if (driver != null) driver.quit();
+            System.exit(0);
         }
     }
 
@@ -46,52 +55,54 @@ public class aa {
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(5000);
+
         System.out.println("Login successful ✔");
     }
 
-    // ---------------- DUNGEON ----------------
+    // ---------------- DUNGEON BOT ----------------
 
     private static void playDungeon() {
 
         for (int stage = 1; stage <= 3; stage++) {
 
             System.out.println("==================================");
-            System.out.println("Dungeon Stage: " + stage);
+            System.out.println("Starting Stage: " + stage);
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
-            sleep(5000);
 
-            int noActionCount = 0;
+            sleep(4000);
+
+            int idleChecks = 0;
 
             while (true) {
 
                 List<WebElement> attacks = driver.findElements(
-                        By.cssSelector("a[href*='/dungeon/attack'], a[href*='attack0'], a[href*='attack1'], a[href*='attack2']")
+                        By.cssSelector("a[href*='/dungeon/attack']")
                 );
 
                 if (attacks.isEmpty()) {
 
-                    noActionCount++;
-                    sleep(1200);
+                    idleChecks++;
+                    sleep(1000);
 
-                    // if nothing appears for a while → stage finished
-                    if (noActionCount >= 5) {
+                    if (idleChecks >= 5) {
                         break;
                     }
 
                     continue;
                 }
 
-                noActionCount = 0;
+                idleChecks = 0;
+
+                System.out.println("Attacking... remaining: " + attacks.size());
 
                 try {
-                    attacks.get(0).click();
+                    safeClick(attacks.get(0));
                 } catch (Exception e) {
-                    ((JavascriptExecutor) driver)
-                            .executeScript("arguments[0].click();", attacks.get(0));
+                    System.out.println("Click retry...");
                 }
 
-                sleep(1200);
+                sleep(2000);
             }
 
             System.out.println("Stage " + stage + " cleared ✔");
@@ -101,6 +112,20 @@ public class aa {
         }
 
         System.out.println("Dungeon completed ✔");
+    }
+
+    // ---------------- SAFE CLICK (ONLY CHANGE) ----------------
+
+    private static void safeClick(WebElement el) {
+
+        try {
+            el.click();
+        } catch (Exception e) {
+            try {
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", el);
+            } catch (Exception ignored) {}
+        }
     }
 
     // ---------------- SLEEP ----------------
