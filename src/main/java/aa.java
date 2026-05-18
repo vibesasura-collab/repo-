@@ -33,6 +33,7 @@ public class aa {
         try {
 
             login(user, pass);
+
             playDungeon();
 
         } catch (Exception e) {
@@ -83,6 +84,7 @@ public class aa {
                 if (attacks.isEmpty()) {
 
                     idleChecks++;
+
                     sleep(1000);
 
                     if (idleChecks >= 5) {
@@ -97,9 +99,9 @@ public class aa {
                 System.out.println("Attacking... remaining: " + attacks.size());
 
                 try {
-                    safeClick(attacks.get(0));
+                    click(attacks.get(0));
                 } catch (Exception e) {
-                    System.out.println("Click retry...");
+                    System.out.println("Click failed, retrying...");
                 }
 
                 sleep(2000);
@@ -114,17 +116,15 @@ public class aa {
         System.out.println("Dungeon completed ✔");
     }
 
-    // ---------------- SAFE CLICK (ONLY CHANGE) ----------------
+    // ---------------- CLICK HELPER ----------------
 
-    private static void safeClick(WebElement el) {
+    private static void click(WebElement el) {
 
         try {
             el.click();
         } catch (Exception e) {
-            try {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", el);
-            } catch (Exception ignored) {}
+            ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].click();", el);
         }
     }
 
