@@ -14,18 +14,12 @@ public class aa {
         String user = System.getenv("GAME_ID");
         String pass = System.getenv("GAME_PASSWORD");
 
-        if (user == null || pass == null) {
-            throw new RuntimeException("Missing credentials");
-        }
-
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
-
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
         options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
@@ -33,12 +27,10 @@ public class aa {
         try {
 
             login(user, pass);
-
             playDungeon();
 
         } finally {
-            if (driver != null) driver.quit();
-            System.exit(0);
+            driver.quit();
         }
     }
 
@@ -54,7 +46,6 @@ public class aa {
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(5000);
-
         System.out.println("Login successful ✔");
     }
 
@@ -68,27 +59,39 @@ public class aa {
             System.out.println("Dungeon Stage: " + stage);
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
+            sleep(5000);
 
-            sleep(5000); // important for JS load
+            int noActionCount = 0;
 
-            int rounds = 0;
+            while (true) {
 
-            while (rounds < 80) {
+                List<WebElement> attacks = driver.findElements(
+                        By.cssSelector("a[href*='/dungeon/attack'], a[href*='attack0'], a[href*='attack1'], a[href*='attack2']")
+                );
 
-                boolean clicked = false;
+                if (attacks.isEmpty()) {
 
-                clicked |= clickIfPresent("a[href*='attack0']");
-                clicked |= clickIfPresent("a[href*='attack1']");
-                clicked |= clickIfPresent("a[href*='attack2']");
-                clicked |= clickIfPresent("a[href*='/dungeon/attack']");
+                    noActionCount++;
+                    sleep(1200);
 
-                if (!clicked) {
-                    sleep(1000);
-                } else {
-                    sleep(600);
+                    // if nothing appears for a while → stage finished
+                    if (noActionCount >= 5) {
+                        break;
+                    }
+
+                    continue;
                 }
 
-                rounds++;
+                noActionCount = 0;
+
+                try {
+                    attacks.get(0).click();
+                } catch (Exception e) {
+                    ((JavascriptExecutor) driver)
+                            .executeScript("arguments[0].click();", attacks.get(0));
+                }
+
+                sleep(1200);
             }
 
             System.out.println("Stage " + stage + " cleared ✔");
@@ -98,27 +101,6 @@ public class aa {
         }
 
         System.out.println("Dungeon completed ✔");
-    }
-
-    // ---------------- CLICK ----------------
-
-    private static boolean clickIfPresent(String css) {
-
-        List<WebElement> el = driver.findElements(By.cssSelector(css));
-
-        if (!el.isEmpty()) {
-
-            try {
-                el.get(0).click();
-            } catch (Exception e) {
-                ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", el.get(0));
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     // ---------------- SLEEP ----------------
