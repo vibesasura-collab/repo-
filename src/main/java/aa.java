@@ -36,8 +36,6 @@ public class aa {
 
             playDungeon();
 
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             if (driver != null) driver.quit();
             System.exit(0);
@@ -60,51 +58,37 @@ public class aa {
         System.out.println("Login successful ✔");
     }
 
-    // ---------------- DUNGEON BOT ----------------
+    // ---------------- DUNGEON ----------------
 
     private static void playDungeon() {
 
         for (int stage = 1; stage <= 3; stage++) {
 
             System.out.println("==================================");
-            System.out.println("Starting Stage: " + stage);
+            System.out.println("Dungeon Stage: " + stage);
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
 
-            sleep(4000);
+            sleep(5000); // important for JS load
 
-            int idleChecks = 0;
+            int rounds = 0;
 
-            while (true) {
+            while (rounds < 80) {
 
-                List<WebElement> attacks = driver.findElements(
-                        By.cssSelector("a[href*='/dungeon/attack']")
-                );
+                boolean clicked = false;
 
-                if (attacks.isEmpty()) {
+                clicked |= clickIfPresent("a[href*='attack0']");
+                clicked |= clickIfPresent("a[href*='attack1']");
+                clicked |= clickIfPresent("a[href*='attack2']");
+                clicked |= clickIfPresent("a[href*='/dungeon/attack']");
 
-                    idleChecks++;
-
+                if (!clicked) {
                     sleep(1000);
-
-                    if (idleChecks >= 5) {
-                        break;
-                    }
-
-                    continue;
+                } else {
+                    sleep(600);
                 }
 
-                idleChecks = 0;
-
-                System.out.println("Attacking... remaining: " + attacks.size());
-
-                try {
-                    click(attacks.get(0));
-                } catch (Exception e) {
-                    System.out.println("Click failed, retrying...");
-                }
-
-                sleep(2000);
+                rounds++;
             }
 
             System.out.println("Stage " + stage + " cleared ✔");
@@ -116,16 +100,25 @@ public class aa {
         System.out.println("Dungeon completed ✔");
     }
 
-    // ---------------- CLICK HELPER ----------------
+    // ---------------- CLICK ----------------
 
-    private static void click(WebElement el) {
+    private static boolean clickIfPresent(String css) {
 
-        try {
-            el.click();
-        } catch (Exception e) {
-            ((JavascriptExecutor) driver)
-                    .executeScript("arguments[0].click();", el);
+        List<WebElement> el = driver.findElements(By.cssSelector(css));
+
+        if (!el.isEmpty()) {
+
+            try {
+                el.get(0).click();
+            } catch (Exception e) {
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", el.get(0));
+            }
+
+            return true;
         }
+
+        return false;
     }
 
     // ---------------- SLEEP ----------------
