@@ -1,17 +1,13 @@
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-import java.time.Duration;
 import java.util.List;
 
 public class Main {
 
     private static WebDriver driver;
-    private static WebDriverWait wait;
 
     public static void main(String[] args) {
 
@@ -34,8 +30,6 @@ public class Main {
 
         driver = new ChromeDriver(options);
 
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-
         try {
 
             login(user, pass);
@@ -50,7 +44,11 @@ public class Main {
 
         } finally {
 
-            driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
+
+            System.exit(0);
         }
     }
 
@@ -60,9 +58,7 @@ public class Main {
 
         driver.get("https://elem.cards/login/");
 
-        wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.name("plogin"))
-        );
+        sleep(3000);
 
         driver.findElement(By.name("plogin")).sendKeys(user);
 
@@ -70,21 +66,7 @@ public class Main {
 
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
-        sleep(4000);
-
-        try {
-
-            List<WebElement> profile = driver.findElements(
-                    By.cssSelector("a.urfin")
-            );
-
-            if (!profile.isEmpty()) {
-                profile.get(0).click();
-            }
-
-        } catch (Exception ignored) {}
-
-        sleep(3000);
+        sleep(5000);
 
         System.out.println("Login successful ✔");
     }
@@ -95,21 +77,19 @@ public class Main {
 
         try {
 
-            // Open main page first
+            // Open main page
             driver.get("https://elem.cards/");
 
-            sleep(5000);
+            sleep(3000);
 
-            // Open daily reward page
+            // Open reward page
             driver.get("https://elem.cards/dailyreward/");
 
-            sleep(5000);
+            sleep(2000);
 
             List<WebElement> rewards = driver.findElements(
                     By.cssSelector("a[href*='/dailyreward/tnx/']")
             );
-
-            System.out.println("Rewards found: " + rewards.size());
 
             if (rewards.isEmpty()) {
 
@@ -118,10 +98,10 @@ public class Main {
                 return;
             }
 
-            String rewardUrl = rewards.get(0)
-                    .getAttribute("href");
+            String rewardUrl =
+                    rewards.get(0).getAttribute("href");
 
-            System.out.println("Reward URL: " + rewardUrl);
+            System.out.println("Opening reward: " + rewardUrl);
 
             driver.get(rewardUrl);
 
@@ -131,7 +111,9 @@ public class Main {
 
         } catch (Exception e) {
 
-            System.out.println("Daily reward failed: " + e.getMessage());
+            System.out.println("Daily reward failed.");
+
+            e.printStackTrace();
         }
     }
 
@@ -162,7 +144,7 @@ public class Main {
 
             System.out.println("Starting duel #" + duelCount);
 
-            safeClick(attackBtn.get(0));
+            click(attackBtn.get(0));
 
             sleep(2000);
 
@@ -198,7 +180,7 @@ public class Main {
             rounds++;
         }
 
-        System.out.println("Fight completed");
+        System.out.println("Fight completed ✔");
     }
 
     // ---------------- NEXT DUEL ----------------
@@ -211,7 +193,7 @@ public class Main {
 
         if (!btn.isEmpty()) {
 
-            safeClick(btn.get(0));
+            click(btn.get(0));
 
             sleep(2000);
         }
@@ -234,17 +216,13 @@ public class Main {
 
         if (!el.isEmpty()) {
 
-            safeClick(el.get(0));
+            click(el.get(0));
         }
     }
 
-    private static void safeClick(WebElement el) {
+    private static void click(WebElement el) {
 
         try {
-
-            wait.until(
-                    ExpectedConditions.elementToBeClickable(el)
-            );
 
             el.click();
 
