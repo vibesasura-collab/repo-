@@ -64,16 +64,14 @@ public class aa {
 
     private static void playDungeon() {
 
-        int stage = 1;
-
-        while (true) {
+        for (int stage = 1; stage <= 3; stage++) {
 
             System.out.println("==================================");
-            System.out.println("Dungeon Stage: " + stage);
+            System.out.println("Starting Stage: " + stage);
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
 
-            sleep(4000); // allow page + JS load
+            sleep(4000);
 
             int idleChecks = 0;
 
@@ -84,20 +82,21 @@ public class aa {
                 );
 
                 if (attacks.isEmpty()) {
+
                     idleChecks++;
 
                     sleep(1000);
 
                     if (idleChecks >= 5) {
-                        break; // no attacks for a while → stage done
+                        break;
                     }
 
                     continue;
                 }
 
-                idleChecks = 0; // reset when attacks appear
+                idleChecks = 0;
 
-                System.out.println("Attacking... found: " + attacks.size());
+                System.out.println("Attacking... remaining: " + attacks.size());
 
                 try {
                     click(attacks.get(0));
@@ -112,14 +111,9 @@ public class aa {
 
             driver.get("https://elem.cards/dungeon/");
             sleep(2000);
-
-            stage++;
-
-            if (stage > 20) {
-                System.out.println("Dungeon run finished ✔");
-                break;
-            }
         }
+
+        System.out.println("Dungeon completed ✔");
     }
 
     // ---------------- CLICK HELPER ----------------
