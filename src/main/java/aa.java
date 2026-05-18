@@ -64,7 +64,7 @@ public class aa {
 
     private static void playDungeon() {
 
-        int stage = 1;
+        int stage = 0;   // ✅ START FROM 0
 
         while (true) {
 
@@ -73,7 +73,7 @@ public class aa {
 
             driver.get("https://elem.cards/dungeon/" + stage + "/start/");
 
-            sleep(4000); // allow page + JS load
+            sleep(4000);
 
             int idleChecks = 0;
 
@@ -84,18 +84,18 @@ public class aa {
                 );
 
                 if (attacks.isEmpty()) {
-                    idleChecks++;
 
+                    idleChecks++;
                     sleep(1000);
 
                     if (idleChecks >= 5) {
-                        break; // no attacks for a while → stage done
+                        break;
                     }
 
                     continue;
                 }
 
-                idleChecks = 0; // reset when attacks appear
+                idleChecks = 0;
 
                 System.out.println("Attacking... found: " + attacks.size());
 
@@ -115,7 +115,8 @@ public class aa {
 
             stage++;
 
-            if (stage > 20) {
+            // ✅ ONLY 0,1,2 allowed
+            if (stage > 2) {
                 System.out.println("Dungeon run finished ✔");
                 break;
             }
