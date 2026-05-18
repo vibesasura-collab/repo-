@@ -70,7 +70,7 @@ public class Main {
 
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
-        sleep(3000);
+        sleep(4000);
 
         try {
 
@@ -84,6 +84,8 @@ public class Main {
 
         } catch (Exception ignored) {}
 
+        sleep(3000);
+
         System.out.println("Login successful ✔");
     }
 
@@ -93,13 +95,21 @@ public class Main {
 
         try {
 
+            // Open main page first
+            driver.get("https://elem.cards/");
+
+            sleep(5000);
+
+            // Open daily reward page
             driver.get("https://elem.cards/dailyreward/");
 
-            sleep(2000);
+            sleep(5000);
 
             List<WebElement> rewards = driver.findElements(
-                    By.xpath("//a[contains(@href,'/dailyreward/tnx/')]")
+                    By.cssSelector("a[href*='/dailyreward/tnx/']")
             );
+
+            System.out.println("Rewards found: " + rewards.size());
 
             if (rewards.isEmpty()) {
 
@@ -115,7 +125,7 @@ public class Main {
 
             driver.get(rewardUrl);
 
-            sleep(2000);
+            sleep(3000);
 
             System.out.println("Daily reward claimed ✔");
 
