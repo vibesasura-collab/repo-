@@ -1,15 +1,15 @@
-name: Final Bot
+name: Reward Bot
 
 on:
   workflow_dispatch:
     inputs:
       run_mode:
-        description: "Type RUN to start final bot"
+        description: "Type RUN to start reward bot"
         required: true
         default: "RUN"
 
 jobs:
-  run-final:
+  run-reward:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -157,8 +157,8 @@ jobs:
       - name: Build Project
         run: mvn -B clean compile
 
-      - name: Run Final Bot
+      - name: Run Reward Bot
         env:
           GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
           GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
-        run: mvn -B exec:java -Dexec.mainClass=final
+        run: mvn -B exec:java -Dexec.mainClass=RewardBot
