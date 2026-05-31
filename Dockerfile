@@ -2,16 +2,17 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY . .
-# Compile the code and grab all dependencies (Selenium, WebDriverManager, etc.)
+# Compile code and grab all dependencies (Selenium, WebDriverManager, etc.)
 RUN mvn -B clean package dependency:copy-dependencies -DskipTests
 
-# Step 2: Runtime stage
-FROM eclipse-temurin:17-jre
+# Step 2: Runtime stage using a stable Ubuntu base with working package trees
+FROM ubuntu:22.04
 WORKDIR /app
 
-# Clean update, fix broken dependencies, and install the core browser layout libraries
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
+# Install Java 17 JRE along with basic utilities your script needs to grab Chrome
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jre-headless \
     wget \
     curl \
     unzip \
@@ -31,11 +32,12 @@ RUN apt-get update -y && \
     librandr2 \
     libgbm1 \
     libasound2 \
-    libpango-1.0-0 && \
+    libpango-1.0-0 \
+    --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy the target build directory over cleanly to preserve paths
+# Copy the target build directory over cleanly
 COPY --from=build /app/target /app/target
 
 # Execute the looped batch code targeting the accurate classpath paths
