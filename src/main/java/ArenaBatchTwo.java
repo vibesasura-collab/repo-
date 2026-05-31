@@ -1,6 +1,7 @@
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
 import java.util.List;
 
 public class ArenaBatchTwo {
@@ -9,7 +10,7 @@ public class ArenaBatchTwo {
 
     public static void main(String[] args) {
 
-        System.out.println("=== Starting Automation ===");
+        System.out.println("=== STARTING BATCH AUTOMATION ===");
 
         for (int i = 21; i <= 41; i++) {
 
@@ -22,14 +23,16 @@ public class ArenaBatchTwo {
             }
 
             try {
-                System.out.println("▶ Account " + i);
+                System.out.println("\n▶ Account " + i);
 
-                // IMPORTANT: Render system chromedriver path
-                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+                // IMPORTANT PATH FOR RENDER + GOOGLE CHROME
+                System.setProperty("webdriver.chrome.driver", "/usr/bin/google-chrome");
 
                 ChromeOptions options = new ChromeOptions();
 
-                // IMPORTANT FIX: DO NOT set binary manually
+                // IMPORTANT: correct binary path
+                options.setBinary("/usr/bin/google-chrome");
+
                 options.addArguments("--headless=new");
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
@@ -80,6 +83,7 @@ public class ArenaBatchTwo {
     }
 
     private static void executeCombatLoop() {
+
         int ticks = 0;
 
         while (ticks < 300) {
@@ -106,6 +110,7 @@ public class ArenaBatchTwo {
     }
 
     private static boolean click(String css) {
+
         List<WebElement> el = driver.findElements(By.cssSelector(css));
 
         if (!el.isEmpty()) {
