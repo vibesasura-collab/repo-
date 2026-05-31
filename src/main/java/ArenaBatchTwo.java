@@ -1,7 +1,6 @@
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-
 import java.util.List;
 
 public class ArenaBatchTwo {
@@ -10,7 +9,7 @@ public class ArenaBatchTwo {
 
     public static void main(String[] args) {
 
-        System.out.println("=== STARTING BATCH AUTOMATION ===");
+        System.out.println("=== STARTING BATCH ===");
 
         for (int i = 21; i <= 41; i++) {
 
@@ -18,27 +17,23 @@ public class ArenaBatchTwo {
             String pass = System.getenv("GAME_PASSWORD_" + i);
 
             if (user == null || pass == null) {
-                System.out.println("Skipping account " + i);
+                System.out.println("Skipping " + i);
                 continue;
             }
 
             try {
-                System.out.println("\n▶ Account " + i);
+                System.out.println("▶ Account " + i);
 
-                // IMPORTANT PATH FOR RENDER + GOOGLE CHROME
-                System.setProperty("webdriver.chrome.driver", "/usr/bin/google-chrome");
+                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
 
                 ChromeOptions options = new ChromeOptions();
 
-                // IMPORTANT: correct binary path
-                options.setBinary("/usr/bin/google-chrome");
-
+                // IMPORTANT: no binary set (FIXES YOUR ERROR)
                 options.addArguments("--headless=new");
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
                 options.addArguments("--disable-gpu");
                 options.addArguments("--window-size=1920,1080");
-                options.addArguments("--remote-debugging-port=9222");
 
                 driver = new ChromeDriver(options);
 
@@ -47,18 +42,17 @@ public class ArenaBatchTwo {
                 driver.get("https://elem.cards/guild/arena/");
                 sleep(2000);
 
-                List<WebElement> joinLinks =
+                List<WebElement> join =
                         driver.findElements(By.xpath("//a[contains(@href,'/guild/arena/join/')]"));
 
-                if (!joinLinks.isEmpty()) {
-                    driver.get(joinLinks.get(0).getAttribute("href"));
-                    sleep(2000);
+                if (!join.isEmpty()) {
+                    driver.get(join.get(0).getAttribute("href"));
                 }
 
                 executeCombatLoop();
 
             } catch (Exception e) {
-                System.out.println("❌ Error account " + i);
+                System.out.println("❌ Error " + i);
                 e.printStackTrace();
             } finally {
                 if (driver != null) driver.quit();
@@ -79,7 +73,6 @@ public class ArenaBatchTwo {
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(4000);
-        System.out.println("Login success ✔");
     }
 
     private static void executeCombatLoop() {
@@ -99,7 +92,6 @@ public class ArenaBatchTwo {
                 driver.navigate().refresh();
 
                 if (driver.findElements(By.cssSelector("a[href*='attack']")).isEmpty()) {
-                    System.out.println("No combat available");
                     break;
                 }
             }
@@ -110,7 +102,6 @@ public class ArenaBatchTwo {
     }
 
     private static boolean click(String css) {
-
         List<WebElement> el = driver.findElements(By.cssSelector(css));
 
         if (!el.isEmpty()) {
