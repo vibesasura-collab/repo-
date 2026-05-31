@@ -8,31 +8,22 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Install standard dependencies and download the Chrome package directly
+# Install dependencies and Chrome via official Google repository setup
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
+    gnupg \
     unzip \
-    libglib2.0-0 \
-    libnss3 \
-    libfontconfig1 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixees3 \
-    librandr2 \
-    libgbm1 \
-    libasound2 \
-    libpango-1.0-0 \
     --no-install-recommends && \
-    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb --no-install-recommends && \
-    rm -f google-chrome-stable_current_amd64.deb && \
+    # Set up Google's modern, secure signing keys properly
+    install -d /etc/apt/keyrings && \
+    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    # Now update and install chrome along with its dependencies automatically
+    apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends && \
+    # Clean up to keep the container small
     rm -rf /var/lib/apt/lists/*
 
 # Copy the compiled target files from the build stage
