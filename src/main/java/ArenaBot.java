@@ -5,7 +5,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.util.List;
 
-public class ArenaBot { // Renamed class to match the file name
+public class ArenaBot {
 
     private static WebDriver driver;
 
@@ -31,9 +31,9 @@ public class ArenaBot { // Renamed class to match the file name
 
         try {
             login(user, pass);
-            
+
             String joinUrl = locateArenaJoinUrl();
-            
+
             if (joinUrl != null) {
                 System.out.println("Found Join URL: " + joinUrl);
                 driver.get(joinUrl);
@@ -110,11 +110,18 @@ public class ArenaBot { // Renamed class to match the file name
         }
     }
 
+    // 🔥 ONLY THIS PART CHANGED
     private static void executeArenaCombat() {
-        int loops = 0;
+
         System.out.println("Commencing attack spam sequence...");
 
-        while (loops < 1000) { 
+        long startTime = System.currentTimeMillis();
+        long maxDuration = 5 * 60 * 1000; // 5 minutes
+
+        int loops = 0;
+
+        while (System.currentTimeMillis() - startTime < maxDuration) {
+
             boolean actionTaken = false;
 
             if (clickIfPresent("a[href*='attack0']")) actionTaken = true;
@@ -122,20 +129,16 @@ public class ArenaBot { // Renamed class to match the file name
             if (clickIfPresent("a[href*='attack2']")) actionTaken = true;
 
             if (!actionTaken) {
-                sleep(1000);
-                driver.navigate().refresh();
-                
-                boolean stillFighting = !driver.findElements(By.cssSelector("a[href*='attack']")).isEmpty();
-                if (!stillFighting) {
-                    System.out.println("No attack options visible after refresh. Arena phase concluded.");
-                    break;
-                }
+                System.out.println("No attack found, waiting for next wave...");
             }
-            
-            sleep(400);
+
+            sleep(2000);
+            driver.navigate().refresh();
+
             loops++;
         }
-        System.out.println("Arena sequence complete ✔");
+
+        System.out.println("5 minutes reached — Arena sequence complete ✔");
     }
 
     private static boolean clickIfPresent(String css) {
