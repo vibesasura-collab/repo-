@@ -9,24 +9,7 @@ public class ArenaBatchTwo {
     private static WebDriver driver;
 
     public static void main(String[] args) {
-        // Render will tell this specific server what account number it handles (21-41)
-        String accountIdStr = System.getenv("ACCOUNT_ID");
-        if (accountIdStr == null) {
-            throw new RuntimeException("Error: Missing ACCOUNT_ID environment variable on Render!");
-        }
-
-        // Dynamically looks up keys like GAME_ID_21, GAME_PASSWORD_21 inside your shared group
-        String expectedUserKey = "GAME_ID_" + accountIdStr;
-        String expectedPassKey = "GAME_PASSWORD_" + accountIdStr;
-
-        String user = System.getenv(expectedUserKey);
-        String pass = System.getenv(expectedPassKey);
-
-        if (user == null || pass == null) {
-            throw new RuntimeException("Error: Key lookup failed for account " + accountIdStr + ". Check Render Environment Group!");
-        }
-
-        System.out.println("=== Launching Batch 2 Bot | Account Instance: " + accountIdStr + " ===");
+        System.out.println("=== Starting Batch 2 Automation (Accounts 21 to 41) ===");
 
         // --- AUTOMATIC CHROME DEPLOYER FOR RENDER LINUX ---
         try {
@@ -36,54 +19,84 @@ public class ArenaBatchTwo {
                 "dpkg -x google-chrome-stable_current_amd64.deb $HOME/.chrome; " +
                 "fi");
             pb.start().waitFor();
-        } catch (Exception e) {
             System.out.println("Note: Native OS Chrome check completed.");
+        } catch (Exception e) {
+            System.out.println("Chrome preparation warning: " + e.getMessage());
         }
 
         WebDriverManager.chromedriver().setup();
 
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--window-size=1920,1080");
-        
-        String homePath = System.getProperty("user.home");
-        options.setBinary(homePath + "/.chrome/opt/google/chrome/google-chrome");
-
-        try {
-            driver = new ChromeDriver(options);
-        } catch (Exception e) {
-            options.setBinary(""); // Use system fallback path if environment handles binary globally
-            driver = new ChromeDriver(options);
-        }
-
-        try {
-            login(user, pass);
+        // LOOP THROUGH ALL ACCOUNTS (21 to 41) ONE BY ONE
+        for (int i = 21; i <= 41; i++) {
+            String accountIdStr = String.valueOf(i);
             
-            // Navigate directly to the room scraper
-            driver.get("https://elem.cards/guild/arena/");
-            sleep(2000);
+            String expectedUserKey = "GAME_ID_" + accountIdStr;
+            String expectedPassKey = "GAME_PASSWORD_" + accountIdStr;
 
-            List<WebElement> joinLinks = driver.findElements(By.xpath("//a[contains(@href,'/guild/arena/join/')]"));
-            if (!joinLinks.isEmpty()) {
-                String targetMatch = joinLinks.get(0).getAttribute("href");
-                System.out.println("Entering targeted session path: " + targetMatch);
-                driver.get(targetMatch);
+            String user = System.getenv(expectedUserKey);
+            String pass = System.getenv(expectedPassKey);
+
+            // If an account is missing in your secrets group, skip it and move to the next
+            if (user == null || pass == null) {
+                System.out.println("Skipping account " + accountIdStr + ": Not found in environment variables.");
+                continue; 
+            }
+
+            System.out.println("\n---------------------------------------------");
+            System.out.println("▶ Processing Account [" + accountIdStr + "]");
+            System.out.println("---------------------------------------------");
+
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments("--headless=new");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--disable-gpu");
+            options.addArguments("--window-size=1920,1080");
+            
+            String homePath = System.getProperty("user.home");
+            options.setBinary(homePath + "/.chrome/opt/google/chrome/google-chrome");
+
+            try {
+                try {
+                    driver = new ChromeDriver(options);
+                } catch (Exception e) {
+                    options.setBinary(""); // Fallback path
+                    driver = new ChromeDriver(options);
+                }
+
+                login(user, pass);
+                
+                // Navigate directly to the room scraper
+                driver.get("https://elem.cards/guild/arena/");
                 sleep(2000);
-            }
 
-            executeCombatLoop();
+                List<WebElement> joinLinks = driver.findElements(By.xpath("//a[contains(@href,'/guild/arena/join/')]"));
+                if (!joinLinks.isEmpty()) {
+                    String targetMatch = joinLinks.get(0).getAttribute("href");
+                    System.out.println("Entering targeted session path: " + targetMatch);
+                    driver.get(targetMatch);
+                    sleep(2000);
+                }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (driver != null) {
-                driver.quit();
+                executeCombatLoop();
+
+            } catch (Exception e) {
+                System.out.println("❌ Error processing account " + accountIdStr);
+                e.printStackTrace();
+            } finally {
+                if (driver != null) {
+                    try {
+                        driver.quit();
+                    } catch (Exception ignored) {}
+                }
             }
-            System.exit(0);
+            
+            // Short rest break between accounts so the server doesn't look suspicious
+            sleep(3000); 
         }
+
+        System.out.println("\n=== All accounts from 21 to 41 have completed cycles! ===");
+        System.exit(0);
     }
 
     private static void login(String user, String pass) {
