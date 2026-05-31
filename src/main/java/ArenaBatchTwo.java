@@ -1,7 +1,6 @@
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import java.util.List;
 
 public class ArenaBatchTwo {
@@ -9,141 +8,113 @@ public class ArenaBatchTwo {
     private static WebDriver driver;
 
     public static void main(String[] args) {
-        System.out.println("=== Starting Batch 2 Automation (Accounts 21 to 41) ===");
 
-        // --- AUTOMATIC CHROME DEPLOYER FOR RENDER LINUX ---
-        try {
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", 
-                "if ! command -v google-chrome >/dev/null 2>&1; then " +
-                "mkdir -p $HOME/.chrome; wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; " +
-                "dpkg -x google-chrome-stable_current_amd64.deb $HOME/.chrome; " +
-                "fi");
-            pb.start().waitFor();
-            System.out.println("Note: Native OS Chrome check completed.");
-        } catch (Exception e) {
-            System.out.println("Chrome preparation warning: " + e.getMessage());
-        }
+        System.out.println("=== Starting Batch Automation ===");
 
-        WebDriverManager.chromedriver().setup();
-
-        // LOOP THROUGH ALL ACCOUNTS (21 to 41) ONE BY ONE
         for (int i = 21; i <= 41; i++) {
-            String accountIdStr = String.valueOf(i);
-            
-            String expectedUserKey = "GAME_ID_" + accountIdStr;
-            String expectedPassKey = "GAME_PASSWORD_" + accountIdStr;
 
-            String user = System.getenv(expectedUserKey);
-            String pass = System.getenv(expectedPassKey);
+            String user = System.getenv("GAME_ID_" + i);
+            String pass = System.getenv("GAME_PASSWORD_" + i);
 
-            // If an account is missing in your secrets group, skip it and move to the next
             if (user == null || pass == null) {
-                System.out.println("Skipping account " + accountIdStr + ": Not found in environment variables.");
-                continue; 
+                System.out.println("Skipping account " + i);
+                continue;
             }
 
-            System.out.println("\n---------------------------------------------");
-            System.out.println("▶ Processing Account [" + accountIdStr + "]");
-            System.out.println("---------------------------------------------");
-
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new");
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
-            
-            String homePath = System.getProperty("user.home");
-            options.setBinary(homePath + "/.chrome/opt/google/chrome/google-chrome");
+            System.out.println("▶ Account " + i);
 
             try {
-                try {
-                    driver = new ChromeDriver(options);
-                } catch (Exception e) {
-                    options.setBinary(""); // Fallback path
-                    driver = new ChromeDriver(options);
-                }
+                ChromeOptions options = new ChromeOptions();
+
+                // ✅ IMPORTANT: Render-safe Chrome setup
+                options.setBinary("/usr/bin/chromium-browser");
+
+                options.addArguments("--headless=new");
+                options.addArguments("--no-sandbox");
+                options.addArguments("--disable-dev-shm-usage");
+                options.addArguments("--disable-gpu");
+                options.addArguments("--window-size=1920,1080");
+                options.addArguments("--remote-debugging-port=9222");
+
+                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+
+                driver = new ChromeDriver(options);
 
                 login(user, pass);
-                
-                // Navigate directly to the room scraper
+
                 driver.get("https://elem.cards/guild/arena/");
                 sleep(2000);
 
-                List<WebElement> joinLinks = driver.findElements(By.xpath("//a[contains(@href,'/guild/arena/join/')]"));
+                List<WebElement> joinLinks =
+                        driver.findElements(By.xpath("//a[contains(@href,'/guild/arena/join/')]"));
+
                 if (!joinLinks.isEmpty()) {
-                    String targetMatch = joinLinks.get(0).getAttribute("href");
-                    System.out.println("Entering targeted session path: " + targetMatch);
-                    driver.get(targetMatch);
+                    driver.get(joinLinks.get(0).getAttribute("href"));
                     sleep(2000);
                 }
 
                 executeCombatLoop();
 
             } catch (Exception e) {
-                System.out.println("❌ Error processing account " + accountIdStr);
+                System.out.println("❌ Error account " + i);
                 e.printStackTrace();
             } finally {
-                if (driver != null) {
-                    try {
-                        driver.quit();
-                    } catch (Exception ignored) {}
-                }
+                if (driver != null) driver.quit();
             }
-            
-            // Short rest break between accounts so the server doesn't look suspicious
-            sleep(3000); 
+
+            sleep(3000);
         }
 
-        System.out.println("\n=== All accounts from 21 to 41 have completed cycles! ===");
-        System.exit(0);
+        System.out.println("=== DONE ===");
     }
 
     private static void login(String user, String pass) {
         driver.get("https://elem.cards/login/");
         sleep(2000);
+
         driver.findElement(By.name("plogin")).sendKeys(user);
         driver.findElement(By.name("ppass")).sendKeys(pass);
         driver.findElement(By.cssSelector("input[type='submit']")).click();
+
         sleep(4000);
-        System.out.println("Login status verified: Success ✔");
+        System.out.println("Login success ✔");
     }
 
     private static void executeCombatLoop() {
         int ticks = 0;
-        System.out.println("Monitoring active combat slots...");
 
         while (ticks < 300) {
-            boolean actionsAvailable = false;
 
-            if (fireAttackSlot("a[href*='attack0']")) actionsAvailable = true;
-            if (fireAttackSlot("a[href*='attack1']")) actionsAvailable = true;
-            if (fireAttackSlot("a[href*='attack2']")) actionsAvailable = true;
+            boolean action = false;
 
-            if (!actionsAvailable) {
+            action |= click("a[href*='attack0']");
+            action |= click("a[href*='attack1']");
+            action |= click("a[href*='attack2']");
+
+            if (!action) {
                 sleep(1500);
                 driver.navigate().refresh();
-                
-                boolean activeGrid = !driver.findElements(By.cssSelector("a[href*='attack']")).isEmpty();
-                if (!activeGrid) {
-                    System.out.println("Combat nodes clear or cycle terminated.");
+
+                if (driver.findElements(By.cssSelector("a[href*='attack']")).isEmpty()) {
+                    System.out.println("No more combat");
                     break;
                 }
             }
+
             sleep(400);
             ticks++;
         }
     }
 
-    private static boolean fireAttackSlot(String selector) {
-        List<WebElement> elements = driver.findElements(By.cssSelector(selector));
-        if (!elements.isEmpty()) {
+    private static boolean click(String css) {
+        List<WebElement> el = driver.findElements(By.cssSelector(css));
+
+        if (!el.isEmpty()) {
             try {
-                elements.get(0).click();
+                el.get(0).click();
             } catch (Exception e) {
-                try {
-                    ((JavascriptExecutor) driver).executeScript("arguments[0].click();", elements.get(0));
-                } catch (Exception ignored) {}
+                ((JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", el.get(0));
             }
             return true;
         }
