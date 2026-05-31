@@ -35,9 +35,8 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy compiled files over to runtime container
-COPY --from=build /app/target/classes /app/classes
-COPY --from=build /app/target/dependency /app/dependency
+# Copy the target build directory over cleanly to preserve paths
+COPY --from=build /app/target /app/target
 
-# Execute the looped batch code
-CMD ["sh", "-c", "java -cp \"/app/classes:/app/dependency/*\" ArenaBatchTwo"]
+# Execute the looped batch code targeting the accurate classpath paths
+CMD ["sh", "-c", "java -cp \"target/classes:target/dependency/*\" ArenaBatchTwo"]
