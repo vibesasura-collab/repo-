@@ -1,33 +1,41 @@
-# Step 1: Build the Java project using Maven
+# Step 1: Build stage using Maven
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY . .
-RUN mvn -B clean package -DskipTests
+# Compile the code and grab all dependencies (Selenium, WebDriverManager, etc.)
+RUN mvn -B clean package dependency:copy-dependencies -DskipTests
 
-# Step 2: Create the runtime execution box
+# Step 2: Runtime stage
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Install dependencies and Chrome via official Google repository setup
+# Install basic network utilities your code needs to pull the chrome package
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
-    gnupg \
     unzip \
+    libglib2.0-0 \
+    libnss3 \
+    libfontconfig1 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    librandr2 \
+    libgbm1 \
+    libasound2 \
+    libpango-1.0-0 \
     --no-install-recommends && \
-    # Set up Google's modern, secure signing keys properly
-    install -d /etc/apt/keyrings && \
-    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg && \
-    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    # Now update and install chrome along with its dependencies automatically
-    apt-get update && apt-get install -y \
-    google-chrome-stable \
-    --no-install-recommends && \
-    # Clean up to keep the container small
     rm -rf /var/lib/apt/lists/*
 
-# Copy the compiled target files from the build stage
-COPY --from=build /app/target /app/target
+# Copy compiled files over to runtime container
+COPY --from=build /app/target/classes /app/classes
+COPY --from=build /app/target/dependency /app/dependency
 
-# Dynamic entrypoint tracking variable matching your specified logic
-CMD ["sh", "-c", "java -cp target/*:target/dependency/* Main --mainClass=${BOT_CLASS}"]
+# Execute using your exact file layout target
+CMD ["sh", "-c", "java -cp \"/app/classes:/app/dependency/*\" ArenaBatchTwo"]
