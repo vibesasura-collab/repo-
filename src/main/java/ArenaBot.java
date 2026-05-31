@@ -114,7 +114,7 @@ public class ArenaBot { // Renamed class to match the file name
         int loops = 0;
         System.out.println("Commencing attack spam sequence...");
 
-        while (loops < 150) { 
+        while (loops < 1000) { 
             boolean actionTaken = false;
 
             if (clickIfPresent("a[href*='attack0']")) actionTaken = true;
