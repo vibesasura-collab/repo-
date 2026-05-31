@@ -9,11 +9,13 @@ RUN mvn -B clean package dependency:copy-dependencies -DskipTests
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Install basic network utilities your code needs to pull the chrome package
-RUN apt-get update && apt-get install -y \
+# Clean update, fix broken dependencies, and install the core browser layout libraries
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
     wget \
     curl \
     unzip \
+    ca-certificates \
     libglib2.0-0 \
     libnss3 \
     libfontconfig1 \
@@ -29,13 +31,13 @@ RUN apt-get update && apt-get install -y \
     librandr2 \
     libgbm1 \
     libasound2 \
-    libpango-1.0-0 \
-    --no-install-recommends && \
+    libpango-1.0-0 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy compiled files over to runtime container
 COPY --from=build /app/target/classes /app/classes
 COPY --from=build /app/target/dependency /app/dependency
 
-# Execute using your exact file layout target
+# Execute the looped batch code
 CMD ["sh", "-c", "java -cp \"/app/classes:/app/dependency/*\" ArenaBatchTwo"]
