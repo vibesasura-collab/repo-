@@ -9,7 +9,7 @@ public class ArenaBatchTwo {
 
     public static void main(String[] args) {
 
-        System.out.println("=== Starting Batch Automation ===");
+        System.out.println("=== Starting Automation ===");
 
         for (int i = 21; i <= 41; i++) {
 
@@ -21,22 +21,21 @@ public class ArenaBatchTwo {
                 continue;
             }
 
-            System.out.println("▶ Account " + i);
-
             try {
+                System.out.println("▶ Account " + i);
+
+                // IMPORTANT: Render system chromedriver path
+                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+
                 ChromeOptions options = new ChromeOptions();
 
-                // ✅ IMPORTANT: Render-safe Chrome setup
-                options.setBinary("/usr/bin/chromium-browser");
-
+                // IMPORTANT FIX: DO NOT set binary manually
                 options.addArguments("--headless=new");
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
                 options.addArguments("--disable-gpu");
                 options.addArguments("--window-size=1920,1080");
                 options.addArguments("--remote-debugging-port=9222");
-
-                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
 
                 driver = new ChromeDriver(options);
 
@@ -96,7 +95,7 @@ public class ArenaBatchTwo {
                 driver.navigate().refresh();
 
                 if (driver.findElements(By.cssSelector("a[href*='attack']")).isEmpty()) {
-                    System.out.println("No more combat");
+                    System.out.println("No combat available");
                     break;
                 }
             }
