@@ -1,6 +1,21 @@
 name: Duel Bot
 
 on:
+  schedule:
+    # -------------------------------------------------------------
+    # TARGET GAME TIME: GMT+1 (Daily at 01:00, 02:20, 04:40, 09:00)
+    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
+    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
+    # -------------------------------------------------------------
+    # Triggers at 01:00 & 09:00 Game Time -> 00:00 & 08:00 UTC/GMT
+    - cron: '0 0,8 * * *'
+    
+    # Triggers at 02:20 Game Time -> 01:20 UTC/GMT
+    - cron: '20 1 * * *'
+    
+    # Triggers at 04:40 Game Time -> 03:40 UTC/GMT
+    - cron: '40 3 * * *'
+
   workflow_dispatch:
     inputs:
       run_mode:
@@ -141,14 +156,16 @@ jobs:
           - id: 41
             game_id_secret: GAME_ID_41
             game_password_secret: GAME_PASSWORD_41
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate manual trigger
+      - name: Validate trigger source
         run: |
+          echo "Event: ${{ github.event_name }}"
           echo "Mode: ${{ github.event.inputs.run_mode }}"
-          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
