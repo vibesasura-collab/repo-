@@ -22,7 +22,6 @@ public class faf {
     private static final String HOME_URL = "https://elem.cards/";
 
     public static void main(String[] args) {
-        // Fetch credentials from GitHub Secrets
         String user = System.getenv("USER_KEY");
         String pass = System.getenv("ACCESS_KEY");
 
@@ -33,7 +32,6 @@ public class faf {
 
         System.out.println("Starting the Nebula Task execution...");
         
-        // Setup Headless Chrome for GitHub Actions
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless"); 
@@ -45,18 +43,14 @@ public class faf {
 
         try {
             login(driver, user, pass);
-
-            System.out.println("Checking and collecting daily items...");
             collectDailyRewardIfAvailable(driver);
             collectFreeGemsIfAvailable(driver);
-
             runOneFullCycle(driver);
             
             System.out.println("Task finished successfully!");
 
         } catch (Exception e) {
-            System.out.println("An error occurred during execution: " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("An error occurred during execution.");
         } finally {
             System.out.println("Closing browser.");
             driver.quit();
@@ -64,30 +58,21 @@ public class faf {
     }
 
     private static void login(WebDriver driver, String user, String pass) {
-        System.out.println("Opening page...");
         driver.get(LOGIN_URL);
         sleep(2000);
 
-        System.out.println("Signing in...");
         driver.findElement(By.name("plogin")).sendKeys(user);
         driver.findElement(By.name("ppass")).sendKeys(pass);
         driver.findElement(By.cssSelector("input[type='submit']")).click();
 
         sleep(5000);
-        System.out.println("Sign-in complete.");
     }
 
     private static void runOneFullCycle(WebDriver driver) {
-        System.out.println("Starting cycle...");
-
         driver.get(AUTOTUNE_URL);
         sleep(3000);
 
-        boolean anyAttackDone = false;
-
         for (int i = 1; i <= 5; i++) {
-            System.out.println("Checking unit " + i);
-
             driver.get(ENEMY_URL + i + "/");
             sleep(2500);
 
@@ -96,24 +81,17 @@ public class faf {
             );
 
             if (attackBtns.isEmpty()) {
-                System.out.println("Attack not available for unit " + i + ". Skipping.");
                 continue;
             }
 
             String attackLink = attackBtns.get(0).getAttribute("href");
 
             if (attackLink == null || attackLink.isEmpty()) {
-                System.out.println("Attack link empty for unit " + i + ". Skipping.");
                 continue;
             }
 
-            anyAttackDone = true;
-            System.out.println("Attacking unit " + i + " with link: " + attackLink);
-
             driver.get(attackLink);
             sleep(5000);
-
-            System.out.println("Attack finished for unit " + i);
 
             driver.get(MANAGE_URL);
             sleep(2500);
@@ -122,10 +100,6 @@ public class faf {
 
             driver.get(AUTOTUNE_URL);
             sleep(2500);
-        }
-
-        if (!anyAttackDone) {
-            System.out.println("No actions available in this cycle.");
         }
     }
 
@@ -139,23 +113,17 @@ public class faf {
                 String upgradeLink = upgradeBtns.get(0).getAttribute("href");
 
                 if (upgradeLink != null && !upgradeLink.isEmpty()) {
-                    System.out.println("Optional step available: " + upgradeLink);
                     driver.get(upgradeLink);
                     sleep(2500);
-                    return;
                 }
             }
-
-            System.out.println("Optional step not available. Skipping.");
         } catch (Exception e) {
-            System.out.println("Optional step failed. Skipping.");
+            // Suppressed
         }
     }
 
     private static void collectFreeGemsIfAvailable(WebDriver driver) {
         try {
-            System.out.println("Checking free gems...");
-
             driver.get(FUNNYFIGHTS_HOME_URL);
             sleep(2500);
 
@@ -167,23 +135,17 @@ public class faf {
                 String freeGemLink = freeGemBtns.get(0).getAttribute("href");
 
                 if (freeGemLink != null && !freeGemLink.isEmpty()) {
-                    System.out.println("Free gems available: " + freeGemLink);
                     driver.get(freeGemLink);
                     sleep(2500);
-                    return;
                 }
             }
-
-            System.out.println("Free gems not available. Skipping.");
         } catch (Exception e) {
-            System.out.println("Free gems step failed. Skipping.");
+            // Suppressed
         }
     }
 
     private static void collectDailyRewardIfAvailable(WebDriver driver) {
         try {
-            System.out.println("Checking daily reward...");
-
             driver.get(HOME_URL);
             sleep(2500);
 
@@ -195,16 +157,12 @@ public class faf {
                 String dailyRewardLink = dailyRewardBtns.get(0).getAttribute("href");
 
                 if (dailyRewardLink != null && !dailyRewardLink.isEmpty()) {
-                    System.out.println("Daily reward available: " + dailyRewardLink);
                     driver.get(dailyRewardLink);
                     sleep(2500);
-                    return;
                 }
             }
-
-            System.out.println("Daily reward not available. Skipping.");
         } catch (Exception e) {
-            System.out.println("Daily reward step failed. Skipping.");
+            // Suppressed
         }
     }
 
