@@ -1,6 +1,15 @@
 name: Donate Bot
 
 on:
+  schedule:
+    # -------------------------------------------------------------
+    # TARGET GAME TIME: GMT+1 (Every day at 19:00)
+    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
+    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
+    # 19:00 Game Time -> 18:00 UTC/GMT
+    # -------------------------------------------------------------
+    - cron: '0 18 * * *'
+
   workflow_dispatch:
     inputs:
       run_mode:
@@ -179,10 +188,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate manual trigger
+      - name: Validate trigger source
         run: |
+          echo "Event: ${{ github.event_name }}"
           echo "Mode: ${{ github.event.inputs.run_mode }}"
-          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
