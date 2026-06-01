@@ -1,6 +1,15 @@
 name: Dungeon Bot
 
 on:
+  schedule:
+    # -------------------------------------------------------------
+    # TARGET GAME TIME: GMT+1 (Every day at 03:30)
+    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
+    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
+    # 03:30 Game Time -> 02:30 UTC/GMT
+    # -------------------------------------------------------------
+    - cron: '30 2 * * *'
+
   workflow_dispatch:
     inputs:
       run_mode:
@@ -140,10 +149,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate manual trigger
+      - name: Validate trigger source
         run: |
+          echo "Event: ${{ github.event_name }}"
           echo "Mode: ${{ github.event.inputs.run_mode }}"
-          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
