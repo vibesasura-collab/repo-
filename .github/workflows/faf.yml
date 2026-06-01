@@ -1,6 +1,14 @@
 name: faf
 
 on:
+  schedule:
+    # -------------------------------------------------------------
+    # TARGET GAME TIME: GMT+1 (Runs every 2 hours)
+    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
+    # INTERVAL: '0 */2 * * *' triggers at the start of every even hour.
+    # -------------------------------------------------------------
+    - cron: '0 */2 * * *'
+
   workflow_dispatch:
     inputs:
       run_mode:
@@ -22,7 +30,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 20
       matrix:
         include:
           - id: 1
@@ -153,10 +161,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Validate manual trigger
+      - name: Validate trigger source
         run: |
+          echo "Event: ${{ github.event_name }}"
           echo "Mode: ${{ github.event.inputs.run_mode }}"
-          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
