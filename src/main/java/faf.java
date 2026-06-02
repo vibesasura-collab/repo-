@@ -5,6 +5,9 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -40,7 +43,7 @@ public class faf {
 
             runOneFullCycle(driver);
 
-            // 🔥 ALWAYS RETURN TO AUTOTUNE PAGE BEFORE SEARCHING BUTTON
+            // 🔥 go back to autotune page BEFORE searching button
             driver.get("https://elem.cards/funnyfights/?autotune=on");
             sleep(3000);
 
@@ -69,12 +72,19 @@ public class faf {
         }
     }
 
+    // ✅ FIXED LOGIN (NO MORE plogin CRASH)
     private static void login(WebDriver driver, String user, String pass) {
+
         driver.get("https://elem.cards");
 
-        for (int i = 0; i < 15; i++) {
-            if (!driver.findElements(By.name("plogin")).isEmpty()) break;
-            sleep(1000);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+        try {
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.name("plogin")));
+        } catch (Exception e) {
+            System.out.println("Login page not loaded properly!");
+            System.out.println("Current URL: " + driver.getCurrentUrl());
+            return;
         }
 
         driver.findElement(By.name("plogin")).sendKeys(user);
@@ -85,6 +95,7 @@ public class faf {
     }
 
     private static void runOneFullCycle(WebDriver driver) {
+
         driver.get("https://elem.cards/funnyfights/?autotune=on");
         sleep(3000);
 
@@ -123,11 +134,8 @@ public class faf {
             );
 
             if (!upgradeBtns.isEmpty()) {
-                String link = upgradeBtns.get(0).getAttribute("href");
-                if (link != null) {
-                    driver.get(link);
-                    sleep(2500);
-                }
+                driver.get(upgradeBtns.get(0).getAttribute("href"));
+                sleep(2500);
             }
         } catch (Exception ignored) {}
     }
