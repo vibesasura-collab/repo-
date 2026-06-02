@@ -46,9 +46,9 @@ public class faf {
             // 1. Run the original 5 attacks exactly as written
             runOneFullCycle(driver);
             
-            // 2. Click the 50 gold button once (looks specifically for the "Change for" text and gold image structure)
+            // 2. 🔥 UPDATED: Only matches if the button text contains "Change for" AND exactly "50"
             List<WebElement> changePackBtn = driver.findElements(
-                By.xpath("//a[contains(@href,'/funnyfights/nextpack/') and .//span[contains(text(),'Change for')]]")
+                By.xpath("//a[contains(@href,'/funnyfights/nextpack/') and .//span[contains(text(),'Change for') and contains(text(),'50')]]")
             );
             
             if (!changePackBtn.isEmpty()) {
@@ -68,7 +68,7 @@ public class faf {
         } catch (Exception e) {
             // Suppressed
         } finally {
-            driver.quit(); // 4. Close and terminate completely
+            driver.quit(); 
         }
     }
 
