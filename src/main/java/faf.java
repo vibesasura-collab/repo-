@@ -28,16 +28,19 @@ public class faf {
 
             login(driver, user, pass);
 
-            collectDailyRewardIfAvailable(driver);
+            // STEP 1: Free gems before fights
             collectFreeGemsIfAvailable(driver);
 
-            // FIRST 5 ATTACKS
+            // STEP 2: First attack cycle (5 fights)
             runOneFullCycle(driver);
 
-            // CLICK "CHANGE FOR 50" ONCE (AFTER FIRST CYCLE)
+            // STEP 3: Change pack ONCE
             clickChangePack(driver);
 
-            // SECOND 5 ATTACKS
+            // STEP 4: Free gems again
+            collectFreeGemsIfAvailable(driver);
+
+            // STEP 5: Second attack cycle (5 fights)
             runOneFullCycle(driver);
 
         } catch (Exception e) {
@@ -59,7 +62,7 @@ public class faf {
         sleep(5000);
     }
 
-    // 5 ATTACKS LOOP
+    // 5 ATTACK LOOP + UPGRADE AFTER EACH ATTACK
     private static void runOneFullCycle(WebDriver driver) {
 
         driver.get("https://elem.cards/funnyfights/?autotune=on");
@@ -74,19 +77,27 @@ public class faf {
                 By.xpath("//a[contains(@href,'/funnyfights/attack/') and .//span[text()='Attack!']]")
             );
 
-            if (attackBtns.isEmpty()) continue;
+            if (!attackBtns.isEmpty()) {
+                String attackLink = attackBtns.get(0).getAttribute("href");
+                driver.get(attackLink);
+                sleep(4000);
+            }
 
-            String attackLink = attackBtns.get(0).getAttribute("href");
-            driver.get(attackLink);
+            // UPGRADE AFTER EACH ATTACK
+            try {
+                List<WebElement> upgradeBtns = driver.findElements(
+                    By.xpath("//a[contains(@href,'/funnyfights/manage/upgrade/0/')]")
+                );
 
-            sleep(4000);
-
-            driver.get("https://elem.cards/funnyfights/manage/");
-            sleep(2000);
+                if (!upgradeBtns.isEmpty()) {
+                    driver.get(upgradeBtns.get(0).getAttribute("href"));
+                    sleep(2000);
+                }
+            } catch (Exception ignored) {}
         }
     }
 
-    // CLICK "CHANGE FOR 50" ONCE
+    // CHANGE PACK (ONLY ONCE)
     private static void clickChangePack(WebDriver driver) {
 
         driver.get("https://elem.cards/funnyfights/?autotune=on");
@@ -107,28 +118,11 @@ public class faf {
         }
     }
 
-    // DAILY REWARD
-    private static void collectDailyRewardIfAvailable(WebDriver driver) {
-        try {
-            driver.get("https://elem.cards/");
-            sleep(2000);
-
-            List<WebElement> btn = driver.findElements(
-                By.xpath("//a[contains(@href,'/dailyreward/tnx/')]")
-            );
-
-            if (!btn.isEmpty()) {
-                driver.get(btn.get(0).getAttribute("href"));
-                sleep(2000);
-            }
-        } catch (Exception ignored) {}
-    }
-
     // FREE GEMS
     private static void collectFreeGemsIfAvailable(WebDriver driver) {
         try {
             driver.get("https://elem.cards/funnyfights/");
-            sleep(2000);
+            sleep(2500);
 
             List<WebElement> btn = driver.findElements(
                 By.xpath("//a[contains(@href,'/funnyfights/freegems/')]")
