@@ -43,26 +43,32 @@ public class faf {
 
             runOneFullCycle(driver);
 
-            // 🔥 go back to autotune page BEFORE searching button
+            // 🔥 STEP 1: ALWAYS GO TO AUTOTUNE PAGE
             driver.get("https://elem.cards/funnyfights/?autotune=on");
             sleep(3000);
 
+            // 🔥 STEP 2: FIND NEXT PACK BUTTON (FIXED XPATH)
             List<WebElement> changePackBtn = driver.findElements(
                 By.xpath("//a[contains(@href,'/funnyfights/nextpack/')]")
             );
 
             System.out.println("Pack buttons found: " + changePackBtn.size());
 
+            // 🔥 STEP 3: CLICK BUTTON SAFELY
             if (!changePackBtn.isEmpty()) {
+                WebElement btn = changePackBtn.get(0);
+
                 try {
-                    changePackBtn.get(0).click();
+                    btn.click();
                 } catch (Exception e) {
                     ((org.openqa.selenium.JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", changePackBtn.get(0));
+                        .executeScript("arguments[0].click();", btn);
                 }
+
                 sleep(4000);
             }
 
+            // 🔥 STEP 4: SECOND CYCLE AFTER PACK SWITCH
             runOneFullCycle(driver);
 
         } catch (Exception e) {
@@ -72,7 +78,7 @@ public class faf {
         }
     }
 
-    // ✅ FIXED LOGIN (NO MORE plogin CRASH)
+    // ✅ LOGIN FIXED (SAFE WAIT)
     private static void login(WebDriver driver, String user, String pass) {
 
         driver.get("https://elem.cards");
@@ -94,6 +100,7 @@ public class faf {
         sleep(5000);
     }
 
+    // 🔥 CORE LOOP (5 ATTACKS)
     private static void runOneFullCycle(WebDriver driver) {
 
         driver.get("https://elem.cards/funnyfights/?autotune=on");
