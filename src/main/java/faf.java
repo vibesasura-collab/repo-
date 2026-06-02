@@ -46,7 +46,7 @@ public class faf {
             // 1. Run the original 5 attacks exactly as written
             runOneFullCycle(driver);
             
-            // 2. 🔥 UPDATED: Only matches if the button text contains "Change for" AND exactly "50"
+            // 2. Click the pack button ONLY if it says "Change for" and has exactly "50"
             List<WebElement> changePackBtn = driver.findElements(
                 By.xpath("//a[contains(@href,'/funnyfights/nextpack/') and .//span[contains(text(),'Change for') and contains(text(),'50')]]")
             );
@@ -66,7 +66,7 @@ public class faf {
             runOneFullCycle(driver);
 
         } catch (Exception e) {
-            // Suppressed
+            e.printStackTrace(); // Prints exact trace if CDP or Selenium breaks
         } finally {
             driver.quit(); 
         }
