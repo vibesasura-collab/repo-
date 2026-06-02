@@ -2,12 +2,7 @@ name: Dungeon Bot
 
 on:
   schedule:
-    # -------------------------------------------------------------
-    # TARGET GAME TIME: GMT+1 (Every day at 03:30)
-    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
-    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
-    # 03:30 Game Time -> 02:30 UTC/GMT
-    # -------------------------------------------------------------
+    # 03:30 GMT+1 = 02:30 UTC
     - cron: '30 2 * * *'
 
   workflow_dispatch:
@@ -26,7 +21,8 @@ jobs:
       fail-fast: false
       max-parallel: 20
       matrix:
-        include:          - id: 1
+        include:
+          - id: 1
             game_id_secret: GAME_ID_1
             game_password_secret: GAME_PASSWORD_1
 
@@ -105,6 +101,7 @@ jobs:
           - id: 20
             game_id_secret: GAME_ID_31
             game_password_secret: GAME_PASSWORD_31
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
