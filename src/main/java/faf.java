@@ -14,13 +14,6 @@ public class faf {
     private static final int MAX_RUN_MINUTES = 345;
     private static final int WAIT_AFTER_FULL_CYCLE_MINUTES = 55;
 
-    private static final String LOGIN_URL = "https://elem.cards";
-    private static final String AUTOTUNE_URL = "https://elem.cards";
-    private static final String ENEMY_URL = "https://elem.cards";
-    private static final String MANAGE_URL = "https://elem.cards";
-    private static final String FUNNYFIGHTS_HOME_URL = "https://elem.cards";
-    private static final String HOME_URL = "https://elem.cards";
-
     public static void main(String[] args) {
         String user = System.getenv("USER_KEY");
         String pass = System.getenv("ACCESS_KEY");
@@ -66,15 +59,30 @@ public class faf {
             runOneFullCycle(driver);
 
         } catch (Exception e) {
-            e.printStackTrace(); // Prints exact trace if CDP or Selenium breaks
+            e.printStackTrace(); 
         } finally {
             driver.quit(); 
         }
     }
 
     private static void login(WebDriver driver, String user, String pass) {
-        driver.get(LOGIN_URL);
-        sleep(2000);
+        driver.get("https://elem.cards/login/");
+
+        for (int i = 0; i < 15; i++) {
+            if (!driver.findElements(By.name("plogin")).isEmpty()) {
+                break;
+            }
+            sleep(1000);
+        }
+
+        System.out.println("Current URL: " + driver.getCurrentUrl());
+        System.out.println("Title: " + driver.getTitle());
+
+        if (driver.findElements(By.name("plogin")).isEmpty()) {
+            System.out.println("--- DEBUG PAGE SOURCE ---");
+            System.out.println(driver.getPageSource());
+            System.out.println("-------------------------");
+        }
 
         driver.findElement(By.name("plogin")).sendKeys(user);
         driver.findElement(By.name("ppass")).sendKeys(pass);
@@ -84,11 +92,12 @@ public class faf {
     }
 
     private static void runOneFullCycle(WebDriver driver) {
-        driver.get(AUTOTUNE_URL);
+        driver.get("https://elem.cards/funnyfights/?autotune=on");
         sleep(3000);
 
         for (int i = 1; i <= 5; i++) {
-            driver.get(ENEMY_URL + i + "/");
+            // Hardcoded full string path so it can never be truncated or malformed
+            driver.get("https://elem.cards/funnyfights/enemy/" + i + "/"); 
             sleep(2500);
 
             List<WebElement> attackBtns = driver.findElements(
@@ -108,12 +117,12 @@ public class faf {
             driver.get(attackLink);
             sleep(5000);
 
-            driver.get(MANAGE_URL);
+            driver.get("https://elem.cards/funnyfights/manage/");
             sleep(2500);
 
             clickUpgradeIfAvailable(driver);
 
-            driver.get(AUTOTUNE_URL);
+            driver.get("https://elem.cards/funnyfights/?autotune=on");
             sleep(2500);
         }
     }
@@ -139,7 +148,7 @@ public class faf {
 
     private static void collectFreeGemsIfAvailable(WebDriver driver) {
         try {
-            driver.get(FUNNYFIGHTS_HOME_URL);
+            driver.get("https://elem.cards/funnyfights/");
             sleep(2500);
 
             List<WebElement> freeGemBtns = driver.findElements(
@@ -161,7 +170,7 @@ public class faf {
 
     private static void collectDailyRewardIfAvailable(WebDriver driver) {
         try {
-            driver.get(HOME_URL);
+            driver.get("https://elem.cards/");
             sleep(2500);
 
             List<WebElement> dailyRewardBtns = driver.findElements(
