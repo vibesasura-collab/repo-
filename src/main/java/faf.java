@@ -23,8 +23,9 @@ public class faf {
         }
 
         WebDriverManager.chromedriver().setup();
+
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless"); 
+        options.addArguments("--headless");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
@@ -33,55 +34,47 @@ public class faf {
 
         try {
             login(driver, user, pass);
+
             collectDailyRewardIfAvailable(driver);
             collectFreeGemsIfAvailable(driver);
-            
-            // 1. Run the original 5 attacks exactly as written
+
             runOneFullCycle(driver);
-            
-            // 2. Click the pack button ONLY if it says "Change for" and has exactly "50"
+
+            // 🔥 ALWAYS RETURN TO AUTOTUNE PAGE BEFORE SEARCHING BUTTON
+            driver.get("https://elem.cards/funnyfights/?autotune=on");
+            sleep(3000);
+
             List<WebElement> changePackBtn = driver.findElements(
-                By.xpath("//a[contains(@href,'/funnyfights/nextpack/') and .//span[contains(text(),'Change for') and contains(text(),'50')]]")
+                By.xpath("//a[contains(@href,'/funnyfights/nextpack/')]")
             );
-            
+
+            System.out.println("Pack buttons found: " + changePackBtn.size());
+
             if (!changePackBtn.isEmpty()) {
                 try {
                     changePackBtn.get(0).click();
                 } catch (Exception e) {
-                    try {
-                        ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", changePackBtn.get(0));
-                    } catch (Exception ignored) {}
+                    ((org.openqa.selenium.JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", changePackBtn.get(0));
                 }
-                sleep(3000); // Small buffer for the fresh layout cards to appear
+                sleep(4000);
             }
 
-            // 3. Repeat your original attack cycle up to 5 one more time
             runOneFullCycle(driver);
 
         } catch (Exception e) {
-            e.printStackTrace(); 
+            e.printStackTrace();
         } finally {
-            driver.quit(); 
+            driver.quit();
         }
     }
 
     private static void login(WebDriver driver, String user, String pass) {
-        driver.get("https://elem.cards/login/");
+        driver.get("https://elem.cards");
 
         for (int i = 0; i < 15; i++) {
-            if (!driver.findElements(By.name("plogin")).isEmpty()) {
-                break;
-            }
+            if (!driver.findElements(By.name("plogin")).isEmpty()) break;
             sleep(1000);
-        }
-
-        System.out.println("Current URL: " + driver.getCurrentUrl());
-        System.out.println("Title: " + driver.getTitle());
-
-        if (driver.findElements(By.name("plogin")).isEmpty()) {
-            System.out.println("--- DEBUG PAGE SOURCE ---");
-            System.out.println(driver.getPageSource());
-            System.out.println("-------------------------");
         }
 
         driver.findElement(By.name("plogin")).sendKeys(user);
@@ -96,23 +89,19 @@ public class faf {
         sleep(3000);
 
         for (int i = 1; i <= 5; i++) {
-            // Hardcoded full string path so it can never be truncated or malformed
-            driver.get("https://elem.cards/funnyfights/enemy/" + i + "/"); 
+
+            driver.get("https://elem.cards/funnyfights/enemy/" + i + "/");
             sleep(2500);
 
             List<WebElement> attackBtns = driver.findElements(
                 By.xpath("//a[contains(@href,'/funnyfights/attack/') and .//span[text()='Attack!']]")
             );
 
-            if (attackBtns.isEmpty()) {
-                continue;
-            }
+            if (attackBtns.isEmpty()) continue;
 
             String attackLink = attackBtns.get(0).getAttribute("href");
 
-            if (attackLink == null || attackLink.isEmpty()) {
-                continue;
-            }
+            if (attackLink == null || attackLink.isEmpty()) continue;
 
             driver.get(attackLink);
             sleep(5000);
@@ -134,16 +123,13 @@ public class faf {
             );
 
             if (!upgradeBtns.isEmpty()) {
-                String upgradeLink = upgradeBtns.get(0).getAttribute("href");
-
-                if (upgradeLink != null && !upgradeLink.isEmpty()) {
-                    driver.get(upgradeLink);
+                String link = upgradeBtns.get(0).getAttribute("href");
+                if (link != null) {
+                    driver.get(link);
                     sleep(2500);
                 }
             }
-        } catch (Exception e) {
-            // Suppressed
-        }
+        } catch (Exception ignored) {}
     }
 
     private static void collectFreeGemsIfAvailable(WebDriver driver) {
@@ -151,21 +137,15 @@ public class faf {
             driver.get("https://elem.cards/funnyfights/");
             sleep(2500);
 
-            List<WebElement> freeGemBtns = driver.findElements(
+            List<WebElement> btns = driver.findElements(
                 By.xpath("//a[contains(@href,'/funnyfights/freegems/') and .//span[text()='Take']]")
             );
 
-            if (!freeGemBtns.isEmpty()) {
-                String freeGemLink = freeGemBtns.get(0).getAttribute("href");
-
-                if (freeGemLink != null && !freeGemLink.isEmpty()) {
-                    driver.get(freeGemLink);
-                    sleep(2500);
-                }
+            if (!btns.isEmpty()) {
+                driver.get(btns.get(0).getAttribute("href"));
+                sleep(2500);
             }
-        } catch (Exception e) {
-            // Suppressed
-        }
+        } catch (Exception ignored) {}
     }
 
     private static void collectDailyRewardIfAvailable(WebDriver driver) {
@@ -173,30 +153,15 @@ public class faf {
             driver.get("https://elem.cards/");
             sleep(2500);
 
-            List<WebElement> dailyRewardBtns = driver.findElements(
+            List<WebElement> btns = driver.findElements(
                 By.xpath("//a[contains(@href,'/dailyreward/tnx/') and .//span[text()='Receive']]")
             );
 
-            if (!dailyRewardBtns.isEmpty()) {
-                String dailyRewardLink = dailyRewardBtns.get(0).getAttribute("href");
-
-                if (dailyRewardLink != null && !dailyRewardLink.isEmpty()) {
-                    driver.get(dailyRewardLink);
-                    sleep(2500);
-                }
+            if (!btns.isEmpty()) {
+                driver.get(btns.get(0).getAttribute("href"));
+                sleep(2500);
             }
-        } catch (Exception e) {
-            // Suppressed
-        }
-    }
-
-    private static boolean shouldStopNow(Instant startTime) {
-        long elapsedMinutes = Duration.between(startTime, Instant.now()).toMinutes();
-        return elapsedMinutes >= MAX_RUN_MINUTES;
-    }
-
-    private static void sleepMinutes(int minutes) {
-        sleep(minutes * 60L * 1000L);
+        } catch (Exception ignored) {}
     }
 
     private static void sleep(long ms) {
@@ -205,5 +170,9 @@ public class faf {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static boolean shouldStopNow(Instant startTime) {
+        return Duration.between(startTime, Instant.now()).toMinutes() >= MAX_RUN_MINUTES;
     }
 }
