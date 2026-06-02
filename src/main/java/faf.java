@@ -14,24 +14,21 @@ public class faf {
     private static final int MAX_RUN_MINUTES = 345;
     private static final int WAIT_AFTER_FULL_CYCLE_MINUTES = 55;
 
-    private static final String LOGIN_URL = "https://elem.cards/login/";
-    private static final String AUTOTUNE_URL = "https://elem.cards/funnyfights/?autotune=on";
-    private static final String ENEMY_URL = "https://elem.cards/funnyfights/enemy/";
-    private static final String MANAGE_URL = "https://elem.cards/funnyfights/manage/";
-    private static final String FUNNYFIGHTS_HOME_URL = "https://elem.cards/funnyfights/";
-    private static final String HOME_URL = "https://elem.cards/";
+    private static final String LOGIN_URL = "https://elem.cards";
+    private static final String AUTOTUNE_URL = "https://elem.cards";
+    private static final String ENEMY_URL = "https://elem.cards";
+    private static final String MANAGE_URL = "https://elem.cards";
+    private static final String FUNNYFIGHTS_HOME_URL = "https://elem.cards";
+    private static final String HOME_URL = "https://elem.cards";
 
     public static void main(String[] args) {
         String user = System.getenv("USER_KEY");
         String pass = System.getenv("ACCESS_KEY");
 
         if (user == null || pass == null || user.isEmpty() || pass.isEmpty()) {
-            System.out.println("Error: USER_KEY or ACCESS_KEY environment variables are missing!");
             return;
         }
 
-        System.out.println("Starting the Nebula Task execution...");
-        
         WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless"); 
@@ -45,15 +42,33 @@ public class faf {
             login(driver, user, pass);
             collectDailyRewardIfAvailable(driver);
             collectFreeGemsIfAvailable(driver);
+            
+            // 1. Run the original 5 attacks exactly as written
             runOneFullCycle(driver);
             
-            System.out.println("Task finished successfully!");
+            // 2. Click the 50 gold button once (looks specifically for the "Change for" text and gold image structure)
+            List<WebElement> changePackBtn = driver.findElements(
+                By.xpath("//a[contains(@href,'/funnyfights/nextpack/') and .//span[contains(text(),'Change for')]]")
+            );
+            
+            if (!changePackBtn.isEmpty()) {
+                try {
+                    changePackBtn.get(0).click();
+                } catch (Exception e) {
+                    try {
+                        ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", changePackBtn.get(0));
+                    } catch (Exception ignored) {}
+                }
+                sleep(3000); // Small buffer for the fresh layout cards to appear
+            }
+
+            // 3. Repeat your original attack cycle up to 5 one more time
+            runOneFullCycle(driver);
 
         } catch (Exception e) {
-            System.out.println("An error occurred during execution.");
+            // Suppressed
         } finally {
-            System.out.println("Closing browser.");
-            driver.quit();
+            driver.quit(); // 4. Close and terminate completely
         }
     }
 
