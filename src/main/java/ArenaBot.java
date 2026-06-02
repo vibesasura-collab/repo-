@@ -87,7 +87,7 @@ public class ArenaBot {
 
         System.out.println("Waiting for arena to start... Polling every 2 seconds.");
 
-        while (attempts < 1000) {
+        while (attempts < 1500) {
             boolean attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
             boolean attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
             boolean attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
