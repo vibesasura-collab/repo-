@@ -28,19 +28,19 @@ public class faf {
 
             login(driver, user, pass);
 
-            // STEP 1: Free gems before fights
+            // STEP 1: Free gems
             collectFreeGemsIfAvailable(driver);
 
-            // STEP 2: First attack cycle (5 fights)
+            // STEP 2: FIRST 5 ATTACKS
             runOneFullCycle(driver);
 
-            // STEP 3: Change pack ONCE
+            // STEP 3: CHANGE PACK (ONLY ONCE)
             clickChangePack(driver);
 
-            // STEP 4: Free gems again
+            // STEP 4: FREE GEMS AGAIN
             collectFreeGemsIfAvailable(driver);
 
-            // STEP 5: Second attack cycle (5 fights)
+            // STEP 5: SECOND 5 ATTACKS
             runOneFullCycle(driver);
 
         } catch (Exception e) {
@@ -78,8 +78,7 @@ public class faf {
             );
 
             if (!attackBtns.isEmpty()) {
-                String attackLink = attackBtns.get(0).getAttribute("href");
-                driver.get(attackLink);
+                driver.get(attackBtns.get(0).getAttribute("href"));
                 sleep(4000);
             }
 
@@ -94,6 +93,10 @@ public class faf {
                     sleep(2000);
                 }
             } catch (Exception ignored) {}
+
+            // BACK TO AUTOTUNE FOR NEXT ATTACK
+            driver.get("https://elem.cards/funnyfights/?autotune=on");
+            sleep(2000);
         }
     }
 
@@ -112,7 +115,7 @@ public class faf {
                 btn.get(0).click();
             } catch (Exception e) {
                 ((org.openqa.selenium.JavascriptExecutor) driver)
-                    .executeScript("arguments[0].click();", btn.get(0));
+                        .executeScript("arguments[0].click();", btn.get(0));
             }
             sleep(4000);
         }
