@@ -2,6 +2,11 @@ name: faf
 
 on:
   schedule:
+    # -------------------------------------------------------------
+    # TARGET GAME TIME: GMT+1 (Runs every 1 hour)
+    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
+    # INTERVAL: '0 * * * *' triggers at the start of every hour.
+    # -------------------------------------------------------------
     - cron: '12 * * * *'
 
   workflow_dispatch:
@@ -23,6 +28,91 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include:
+          - id: 1
+            game_id_secret: GAME_ID_1
+            game_password_secret: GAME_PASSWORD_1
+
+          - id: 2
+            game_id_secret: GAME_ID_6
+            game_password_secret: GAME_PASSWORD_6
+
+          - id: 3
+            game_id_secret: GAME_ID_4
+            game_password_secret: GAME_PASSWORD_4
+
+          - id: 4
+            game_id_secret: GAME_ID_2
+            game_password_secret: GAME_PASSWORD_2
+
+          - id: 5
+            game_id_secret: GAME_ID_5
+            game_password_secret: GAME_PASSWORD_5
+
+          - id: 6
+            game_id_secret: GAME_ID_3
+            game_password_secret: GAME_PASSWORD_3
+
+          - id: 7
+            game_id_secret: GAME_ID_37
+            game_password_secret: GAME_PASSWORD_37
+
+          - id: 8
+            game_id_secret: GAME_ID_11
+            game_password_secret: GAME_PASSWORD_11
+
+          - id: 9
+            game_id_secret: GAME_ID_29
+            game_password_secret: GAME_PASSWORD_29
+
+          - id: 10
+            game_id_secret: GAME_ID_34
+            game_password_secret: GAME_PASSWORD_34
+
+          - id: 11
+            game_id_secret: GAME_ID_30
+            game_password_secret: GAME_PASSWORD_30
+
+          - id: 12
+            game_id_secret: GAME_ID_35
+            game_password_secret: GAME_PASSWORD_35
+
+          - id: 13
+            game_id_secret: GAME_ID_20
+            game_password_secret: GAME_PASSWORD_20
+
+          - id: 14
+            game_id_secret: GAME_ID_39
+            game_password_secret: GAME_PASSWORD_39
+
+          - id: 15
+            game_id_secret: GAME_ID_8
+            game_password_secret: GAME_PASSWORD_8
+
+          - id: 16
+            game_id_secret: GAME_ID_25
+            game_password_secret: GAME_PASSWORD_25
+
+          - id: 17
+            game_id_secret: GAME_ID_19
+            game_password_secret: GAME_PASSWORD_19
+
+          - id: 18
+            game_id_secret: GAME_ID_14
+            game_password_secret: GAME_PASSWORD_14
+
+          - id: 19
+            game_id_secret: GAME_ID_28
+            game_password_secret: GAME_PASSWORD_28
+
+          - id: 20
+            game_id_secret: GAME_ID_31
+            game_password_secret: GAME_PASSWORD_31
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -43,50 +133,23 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget curl unzip gnupg
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Verify Chrome
+        run: google-chrome --version
+
       - name: Build Project
         run: mvn -B clean compile
 
-      - name: Run Bot (5-thread Java execution)
+      - name: Run Bot (faf)
         env:
-          GAME_ID_1: ${{ secrets.GAME_ID_1 }}
-          GAME_PASSWORD_1: ${{ secrets.GAME_PASSWORD_1 }}
-          GAME_ID_2: ${{ secrets.GAME_ID_2 }}
-          GAME_PASSWORD_2: ${{ secrets.GAME_PASSWORD_2 }}
-          GAME_ID_3: ${{ secrets.GAME_ID_3 }}
-          GAME_PASSWORD_3: ${{ secrets.GAME_PASSWORD_3 }}
-          GAME_ID_4: ${{ secrets.GAME_ID_4 }}
-          GAME_PASSWORD_4: ${{ secrets.GAME_PASSWORD_4 }}
-          GAME_ID_5: ${{ secrets.GAME_ID_5 }}
-          GAME_PASSWORD_5: ${{ secrets.GAME_PASSWORD_5 }}
-          GAME_ID_6: ${{ secrets.GAME_ID_6 }}
-          GAME_PASSWORD_6: ${{ secrets.GAME_PASSWORD_6 }}
-          GAME_ID_7: ${{ secrets.GAME_ID_7 }}
-          GAME_PASSWORD_7: ${{ secrets.GAME_PASSWORD_7 }}
-          GAME_ID_8: ${{ secrets.GAME_ID_8 }}
-          GAME_PASSWORD_8: ${{ secrets.GAME_PASSWORD_8 }}
-          GAME_ID_9: ${{ secrets.GAME_ID_9 }}
-          GAME_PASSWORD_9: ${{ secrets.GAME_PASSWORD_9 }}
-          GAME_ID_10: ${{ secrets.GAME_ID_10 }}
-          GAME_PASSWORD_10: ${{ secrets.GAME_PASSWORD_10 }}
-          GAME_ID_11: ${{ secrets.GAME_ID_11 }}
-          GAME_PASSWORD_11: ${{ secrets.GAME_PASSWORD_11 }}
-          GAME_ID_12: ${{ secrets.GAME_ID_12 }}
-          GAME_PASSWORD_12: ${{ secrets.GAME_PASSWORD_12 }}
-          GAME_ID_13: ${{ secrets.GAME_ID_13 }}
-          GAME_PASSWORD_13: ${{ secrets.GAME_PASSWORD_13 }}
-          GAME_ID_14: ${{ secrets.GAME_ID_14 }}
-          GAME_PASSWORD_14: ${{ secrets.GAME_PASSWORD_14 }}
-          GAME_ID_15: ${{ secrets.GAME_ID_15 }}
-          GAME_PASSWORD_15: ${{ secrets.GAME_PASSWORD_15 }}
-          GAME_ID_16: ${{ secrets.GAME_ID_16 }}
-          GAME_PASSWORD_16: ${{ secrets.GAME_PASSWORD_16 }}
-          GAME_ID_17: ${{ secrets.GAME_ID_17 }}
-          GAME_PASSWORD_17: ${{ secrets.GAME_PASSWORD_17 }}
-          GAME_ID_18: ${{ secrets.GAME_ID_18 }}
-          GAME_PASSWORD_18: ${{ secrets.GAME_PASSWORD_18 }}
-          GAME_ID_19: ${{ secrets.GAME_ID_19 }}
-          GAME_PASSWORD_19: ${{ secrets.GAME_PASSWORD_19 }}
-          GAME_ID_20: ${{ secrets.GAME_ID_20 }}
-          GAME_PASSWORD_20: ${{ secrets.GAME_PASSWORD_20 }}
-
+          USER_KEY: ${{ secrets[matrix.game_id_secret] }}
+          ACCESS_KEY: ${{ secrets[matrix.game_password_secret] }}
         run: mvn -B -q exec:java -Dexec.mainClass="faf"
