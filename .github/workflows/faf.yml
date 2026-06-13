@@ -1,14 +1,6 @@
 name: faf
 
 on:
-  schedule:
-    # -------------------------------------------------------------
-    # TARGET GAME TIME: GMT+1 (Runs every 1 hour)
-    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
-    # INTERVAL: '0 * * * *' triggers at the start of every hour.
-    # -------------------------------------------------------------
-
-
   workflow_dispatch:
     inputs:
       run_mode:
@@ -27,7 +19,6 @@ jobs:
   run-faf:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-
     strategy:
       fail-fast: false
       max-parallel: 20
@@ -36,83 +27,63 @@ jobs:
           - id: 1
             game_id_secret: GAME_ID_1
             game_password_secret: GAME_PASSWORD_1
-
           - id: 2
             game_id_secret: GAME_ID_6
             game_password_secret: GAME_PASSWORD_6
-
           - id: 3
             game_id_secret: GAME_ID_4
             game_password_secret: GAME_PASSWORD_4
-
           - id: 4
             game_id_secret: GAME_ID_2
             game_password_secret: GAME_PASSWORD_2
-
           - id: 5
             game_id_secret: GAME_ID_5
             game_password_secret: GAME_PASSWORD_5
-
           - id: 6
             game_id_secret: GAME_ID_3
             game_password_secret: GAME_PASSWORD_3
-
           - id: 7
             game_id_secret: GAME_ID_37
             game_password_secret: GAME_PASSWORD_37
-
           - id: 8
             game_id_secret: GAME_ID_11
             game_password_secret: GAME_PASSWORD_11
-
           - id: 9
             game_id_secret: GAME_ID_29
             game_password_secret: GAME_PASSWORD_29
-
           - id: 10
             game_id_secret: GAME_ID_34
             game_password_secret: GAME_PASSWORD_34
-
           - id: 11
             game_id_secret: GAME_ID_30
             game_password_secret: GAME_PASSWORD_30
-
           - id: 12
             game_id_secret: GAME_ID_35
             game_password_secret: GAME_PASSWORD_35
-
           - id: 13
             game_id_secret: GAME_ID_20
             game_password_secret: GAME_PASSWORD_20
-
           - id: 14
             game_id_secret: GAME_ID_39
             game_password_secret: GAME_PASSWORD_39
-
           - id: 15
             game_id_secret: GAME_ID_8
             game_password_secret: GAME_PASSWORD_8
-
           - id: 16
             game_id_secret: GAME_ID_25
             game_password_secret: GAME_PASSWORD_25
-
           - id: 17
             game_id_secret: GAME_ID_19
             game_password_secret: GAME_PASSWORD_19
-
           - id: 18
             game_id_secret: GAME_ID_14
             game_password_secret: GAME_PASSWORD_14
-
           - id: 19
             game_id_secret: GAME_ID_28
             game_password_secret: GAME_PASSWORD_28
-
           - id: 20
             game_id_secret: GAME_ID_31
             game_password_secret: GAME_PASSWORD_31
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -121,7 +92,7 @@ jobs:
         run: |
           echo "Event: ${{ github.event_name }}"
           echo "Mode: ${{ github.event.inputs.run_mode }}"
-          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] || [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
