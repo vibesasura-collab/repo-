@@ -1,12 +1,17 @@
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
 import java.util.List;
 
 public class RaidBot {
+
+    static WebDriver driver;
+    static WebDriverWait wait;
 
     public static void main(String[] args) {
 
@@ -17,73 +22,57 @@ public class RaidBot {
             throw new RuntimeException("Missing credentials");
         }
 
-        WebDriver driver = setup();
+        driver = setup();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
 
-            login(driver, user, pass);
+            login(user, pass);
 
-            // ---------------- GUILD FLOW ----------------
-            driver.get("https://elem.cards/guild/");
-            sleep(2000);
-
-            driver.get("https://elem.cards/guild/graids/");
-            sleep(2000);
-
-            driver.get("https://elem.cards/guild/raids/");
-            sleep(2000);
-
-            driver.get("https://elem.cards/guild/raids/dragon_water2/join/");
-            sleep(3000);
-
-            System.out.println("Joined raid");
-
-            // ---------------- RAID PAGE ----------------
-            driver.get("https://elem.cards/guild/raids/dragon_water2/");
-
-            int tries = 0;
-            boolean started = false;
-
-            while (tries < 60 && !started) {
-
-                sleep(3000);
-
-                if (isRaidStarted(driver)) {
-                    System.out.println("Raid started!");
-                    started = true;
-                    break;
-                }
-
-                System.out.println("Raid not started → refreshing...");
-                sleep(10000);
-                driver.navigate().refresh();
-
-                tries++;
-            }
-
-            if (!started) {
-                System.out.println("Raid not started in time.");
-                return;
-            }
-
-            // ---------------- CONTINUOUS ATTACK LOOP ----------------
             while (true) {
 
-                boolean didAttack = false;
+                // ---------------- GUILD FLOW ----------------
+                click("/guild/");
+                click("/guild/graids/");
+                click("/guild/graids/tweens/");
+                clickJoinRaid();
 
-                didAttack |= attackOnce(driver, 0);
-                didAttack |= attackOnce(driver, 1);
-                didAttack |= attackOnce(driver, 2);
+                System.out.println("Joined raid");
 
-                if (!didAttack) {
-                    System.out.println("Raid finished (no attack buttons left)");
-                    break;
+                sleep(2000);
+
+                // ---------------- ATTACK LOOP ----------------
+                boolean raidActive = true;
+
+                while (raidActive) {
+
+                    boolean attacked = false;
+
+                    attacked |= clickIfExists("a[href*='/attack0/']");
+                    attacked |= clickIfExists("a[href*='/attack1/']");
+                    attacked |= clickIfExists("a[href*='/attack2/']");
+
+                    sleep(2000);
+
+                    if (!attacked) {
+
+                        System.out.println("No attacks found");
+
+                        // check start digging
+                        if (clickIfExists("a[href*='/start_cave/']")) {
+
+                            System.out.println("Start digging clicked");
+                            sleep(2000);
+                            continue;
+
+                        } else {
+
+                            System.out.println("No start digging → restarting guild flow");
+                            raidActive = false;
+                        }
+                    }
                 }
-
-                sleep(1200);
             }
-
-            System.out.println("Raid completed");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -93,7 +82,7 @@ public class RaidBot {
     }
 
     // ---------------- LOGIN ----------------
-    private static void login(WebDriver driver, String user, String pass) {
+    private static void login(String user, String pass) {
 
         driver.get("https://elem.cards/login/");
 
@@ -109,41 +98,58 @@ public class RaidBot {
         } catch (Exception ignored) {}
     }
 
-    // ---------------- RAID DETECTION ----------------
-    private static boolean isRaidStarted(WebDriver driver) {
-
-        List<WebElement> buttons = driver.findElements(By.xpath(
-                "//a[contains(@href,'attack0') or contains(@href,'attack1') or contains(@href,'attack2')]"
-        ));
-
-        return !buttons.isEmpty();
+    // ---------------- NAV CLICK ----------------
+    private static void click(String path) {
+        try {
+            WebElement el = wait.until(
+                    ExpectedConditions.elementToBeClickable(
+                            By.cssSelector("a[href='" + path + "']")
+                    )
+            );
+            el.click();
+            sleep(2000);
+        } catch (Exception e) {
+            System.out.println("Failed click: " + path);
+        }
     }
 
-    // ---------------- ATTACK (FIXED) ----------------
-    private static boolean attackOnce(WebDriver driver, int id) {
+    private static void clickJoinRaid() {
+        try {
+            WebElement el = wait.until(
+                    ExpectedConditions.elementToBeClickable(
+                            By.cssSelector("a[href^='/guild/graids/tweens/join/']")
+                    )
+            );
+            el.click();
+            sleep(2000);
+        } catch (Exception e) {
+            System.out.println("Join raid not found");
+        }
+    }
+
+    // ---------------- ATTACK / START CHECK ----------------
+    private static boolean clickIfExists(String css) {
 
         try {
+            List<WebElement> el = driver.findElements(By.cssSelector(css));
 
-            List<WebElement> btn = driver.findElements(
-                    By.cssSelector("a[href*='attack" + id + "']")
-            );
+            if (el.isEmpty()) return false;
 
-            if (btn.isEmpty()) return false;
-
-            WebElement el = btn.get(0);
+            WebElement e = el.get(0);
 
             ((JavascriptExecutor) driver)
-                    .executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+                    .executeScript("arguments[0].scrollIntoView({block:'center'});", e);
 
-            sleep(400);
+            sleep(300);
 
             try {
-                el.click();
-            } catch (Exception e) {
+                e.click();
+            } catch (Exception ex) {
                 ((JavascriptExecutor) driver)
-                        .executeScript("arguments[0].click();", el);
+                        .executeScript("arguments[0].click();", e);
             }
 
+            sleep(2000);
             return true;
 
         } catch (Exception e) {
@@ -162,10 +168,7 @@ public class RaidBot {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");
 
-        WebDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-
-        return driver;
+        return new ChromeDriver(options);
     }
 
     // ---------------- SLEEP ----------------
