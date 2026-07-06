@@ -1,44 +1,112 @@
-name: Raid Bot (Manual Mode)
+name: Raid Bot
 
 on:
   workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "Type RUN to start raid bot"
+        required: true
+        default: "RUN"
 
 jobs:
   run-raid:
     runs-on: ubuntu-latest
-
-    timeout-minutes: 360
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
-      max-parallel: 20
 
       matrix:
         include:
           - id: 2
+            game_id_secret: GAME_ID_6
+            game_password_secret: GAME_PASSWORD_6
+
           - id: 3
+            game_id_secret: GAME_ID_4
+            game_password_secret: GAME_PASSWORD_4
+
           - id: 4
+            game_id_secret: GAME_ID_2
+            game_password_secret: GAME_PASSWORD_2
+
           - id: 5
+            game_id_secret: GAME_ID_5
+            game_password_secret: GAME_PASSWORD_5
+
           - id: 6
+            game_id_secret: GAME_ID_3
+            game_password_secret: GAME_PASSWORD_3
+
           - id: 7
+            game_id_secret: GAME_ID_37
+            game_password_secret: GAME_PASSWORD_37
+
           - id: 8
+            game_id_secret: GAME_ID_11
+            game_password_secret: GAME_PASSWORD_11
+
           - id: 9
+            game_id_secret: GAME_ID_29
+            game_password_secret: GAME_PASSWORD_29
+
           - id: 10
+            game_id_secret: GAME_ID_34
+            game_password_secret: GAME_PASSWORD_34
+
           - id: 11
+            game_id_secret: GAME_ID_30
+            game_password_secret: GAME_PASSWORD_30
+
           - id: 12
+            game_id_secret: GAME_ID_35
+            game_password_secret: GAME_PASSWORD_35
+
           - id: 13
+            game_id_secret: GAME_ID_20
+            game_password_secret: GAME_PASSWORD_20
+
           - id: 14
+            game_id_secret: GAME_ID_39
+            game_password_secret: GAME_PASSWORD_39
+
           - id: 15
+            game_id_secret: GAME_ID_8
+            game_password_secret: GAME_PASSWORD_8
+
           - id: 16
+            game_id_secret: GAME_ID_25
+            game_password_secret: GAME_PASSWORD_25
+
           - id: 17
+            game_id_secret: GAME_ID_19
+            game_password_secret: GAME_PASSWORD_19
+
           - id: 18
+            game_id_secret: GAME_ID_14
+            game_password_secret: GAME_PASSWORD_14
+
           - id: 19
+            game_id_secret: GAME_ID_28
+            game_password_secret: GAME_PASSWORD_28
+
           - id: 20
-          - id: 21
+            game_id_secret: GAME_ID_31
+            game_password_secret: GAME_PASSWORD_31
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Validate manual trigger
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Mode: ${{ github.event.inputs.run_mode }}"
+
+          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+            echo "Invalid run mode. Exiting."
+            exit 1
+          fi
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -51,6 +119,6 @@ jobs:
 
       - name: Run Raid Bot
         env:
-          GAME_ID: ${{ secrets[format('GAME_ID_{0}', matrix.id)] }}
-          GAME_PASSWORD: ${{ secrets[format('GAME_PASSWORD_{0}', matrix.id)] }}
+          GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
+          GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
         run: mvn -B exec:java -Dexec.mainClass=RaidBot
