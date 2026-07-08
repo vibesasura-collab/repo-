@@ -110,7 +110,7 @@ public class ArenaBot {
         }
     }
 
-    // 🔥 ONLY THIS PART CHANGED
+    // 🔥 ONLY THIS PART CHANGED (Optimized for maximum speed)
     private static void executeArenaCombat() {
 
         System.out.println("Commencing attack spam sequence...");
@@ -118,27 +118,67 @@ public class ArenaBot {
         long startTime = System.currentTimeMillis();
         long maxDuration = 5 * 60 * 1000; // 5 minutes
 
-        int loops = 0;
-
         while (System.currentTimeMillis() - startTime < maxDuration) {
 
             boolean actionTaken = false;
 
-            if (clickIfPresent("a[href*='attack0']")) actionTaken = true;
-            if (clickIfPresent("a[href*='attack1']")) actionTaken = true;
-            if (clickIfPresent("a[href*='attack2']")) actionTaken = true;
-
-            if (!actionTaken) {
-                System.out.println("No attack found, waiting for next wave...");
+            // 1. High-priority checks: Check for x1.6 or x1.5 matches instantly
+            if (clickMultiplierLink("x 1.6")) {
+                actionTaken = true;
+            } else if (clickMultiplierLink("x 1.5")) {
+                actionTaken = true;
             }
 
-            sleep(2000);
-            driver.navigate().refresh();
+            // 2. If high multipliers aren't on the page, hit 'Switch' to roll for them
+            if (!actionTaken) {
+                boolean switched = clickIfPresent("a[href*='/chtarget/']");
+                if (switched) {
+                    sleep(400); // Quick brief sleep for switch state updates
+                    // Instantly retry for top tiers right after switching
+                    if (clickMultiplierLink("x 1.6")) actionTaken = true;
+                    else if (clickMultiplierLink("x 1.5")) actionTaken = true;
+                }
+            }
 
-            loops++;
+            // 3. Middle-priority check: Fallback to regular x1 paths if top targets missing
+            if (!actionTaken) {
+                if (clickMultiplierLink("x 1")) {
+                    actionTaken = true;
+                }
+            }
+
+            // 4. Absolute final fallback: Grab lower damage tier x0.5 as last option
+            if (!actionTaken) {
+                if (clickMultiplierLink("x 0.5")) {
+                    actionTaken = true;
+                }
+            }
+
+            // If absolutely nothing was found (stuck screen or refresh delay required)
+            if (!actionTaken) {
+                driver.navigate().refresh();
+                sleep(1000);
+            } else {
+                sleep(300); // Small, ultra-fast break between clicks to run smoothly
+            }
         }
 
         System.out.println("5 minutes reached — Arena sequence complete ✔");
+    }
+
+    // 🚀 High-speed selector to instantly bridge the gap from text element straight to the link
+    private static boolean clickMultiplierLink(String multiplierText) {
+        try {
+            // Locates the a tag inside any row that matches the targeted multiplier string contextually
+            String xpath = "//div[@class='fb_path' and contains(., '" + multiplierText + "')]//a[contains(@href, '/attack')]";
+            List<WebElement> targetLinks = driver.findElements(By.xpath(xpath));
+            
+            if (!targetLinks.isEmpty()) {
+                click(targetLinks.get(0));
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     private static boolean clickIfPresent(String css) {
