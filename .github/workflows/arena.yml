@@ -28,9 +28,7 @@ jobs:
       max-parallel: 20
       matrix:
         include:
-          - id: 1
-            game_id_secret: GAME_ID_1
-            game_password_secret: GAME_PASSWORD_1
+
 
           - id: 2
             game_id_secret: GAME_ID_6
