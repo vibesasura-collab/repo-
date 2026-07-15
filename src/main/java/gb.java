@@ -32,27 +32,37 @@ public class gb {
         try {
             login(user, pass);
 
-            // Step 1: Go to Guild War page
+            // 1. Go to Guild War page initially
             navigateToGuildWar();
 
-            // Step 2: Attempt to find and click the Join URL
+            // 2. Check for the Join link the first time
             String joinUrl = locateWarJoinUrl();
 
             if (joinUrl != null) {
-                System.out.println("Found Join URL: " + joinUrl);
+                System.out.println("Found Join URL on first try: " + joinUrl);
                 driver.get(joinUrl);
                 sleep(2000);
             } else {
-                System.out.println("Join link not found. Falling back to Main Page...");
-                // Fallback: Click Main Page icon
+                System.out.println("Join link not found. Going to Main Page as fallback...");
                 clickMainPageIcon();
                 sleep(3000);
                 
-                // Try navigating back to War page
+                // Go back to the Guild War page
                 navigateToGuildWar();
+
+                // 🔥 FIX: Now check for the Join link AGAIN after coming back!
+                System.out.println("Checking for Join link again after returning from Main page...");
+                joinUrl = locateWarJoinUrl();
+                if (joinUrl != null) {
+                    System.out.println("Found Join URL on second try: " + joinUrl);
+                    driver.get(joinUrl);
+                    sleep(2000);
+                } else {
+                    System.out.println("Join link still not found. Moving straight to combat wait stage.");
+                }
             }
 
-            // Step 3: Wait for combat start and fight
+            // 3. Wait for combat start and fight
             waitForWarStartAndFight();
 
         } catch (Exception e) {
@@ -122,12 +132,24 @@ public class gb {
         boolean battleStarted = false;
         int attempts = 0;
 
-        System.out.println("Waiting for war battle to start... Polling every 2 seconds.");
+        // Quick check to see if battle is active right away
+        boolean attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
+        boolean attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
+        boolean attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
 
-        while (attempts < 1500) {
-            boolean attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
-            boolean attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
-            boolean attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
+        if (attack0Exists || attack1Exists || attack2Exists) {
+            System.out.println("Battle is already active! Starting combat.");
+            executeWarCombat();
+            return;
+        }
+
+        System.out.println("No active attacks found. Waiting for battle to start... Polling every 2 seconds.");
+
+        // Wait up to ~10 minutes (300 attempts of 2-second waits)
+        while (attempts < 300) {
+            attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
+            attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
+            attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
 
             if (attack0Exists || attack1Exists || attack2Exists) {
                 System.out.println("Battle Started! Attack links detected.");
@@ -151,7 +173,8 @@ public class gb {
         System.out.println("Commencing attack spam sequence...");
 
         long startTime = System.currentTimeMillis();
-        long maxDuration = 10 * 60 * 1000; // 10 minutes
+        long maxDuration = 10 * 60 * 1000; // 10 minutes max fight time
+        int consecutiveNoActionCount = 0;
 
         while (System.currentTimeMillis() - startTime < maxDuration) {
             boolean actionTaken = false;
@@ -168,36 +191,45 @@ public class gb {
                 boolean switched = clickIfPresent("a[href*='/chtarget/']");
                 if (switched) {
                     sleep(400); // Quick brief sleep for switch state updates
-                    // Instantly retry for top tiers right after switching
                     if (clickMultiplierLink("x 1.6")) actionTaken = true;
                     else if (clickMultiplierLink("x 1.5")) actionTaken = true;
                 }
             }
 
-            // 3. Middle-priority check: Fallback to regular x1 paths if top targets missing
+            // 3. Middle-priority check: Fallback to regular x1 paths
             if (!actionTaken) {
                 if (clickMultiplierLink("x 1")) {
                     actionTaken = true;
                 }
             }
 
-            // 4. Absolute final fallback: Grab lower damage tier x0.5 as last option
+            // 4. Absolute final fallback: Grab lower damage tier x0.5
             if (!actionTaken) {
                 if (clickMultiplierLink("x 0.5")) {
                     actionTaken = true;
                 }
             }
 
-            // If absolutely nothing was found (stuck screen or refresh delay required)
+            // --- SMART EXIT LOGIC ---
             if (!actionTaken) {
+                consecutiveNoActionCount++;
+                
+                // If we found nothing to attack for 10 consecutive refreshes (~15-20 seconds),
+                // we assume the war is finished or you ran out of energy.
+                if (consecutiveNoActionCount >= 10) {
+                    System.out.println("No targets or attacks available for 10 consecutive checks. Ending combat.");
+                    break;
+                }
+
                 driver.navigate().refresh();
-                sleep(1000);
+                sleep(1500); // Slightly longer pause when page is idle
             } else {
-                sleep(300); // Small, ultra-fast break between clicks to run smoothly
+                consecutiveNoActionCount = 0; // Reset counter since we successfully attacked
+                sleep(300); // Fast break between successful hits
             }
         }
 
-        System.out.println("5 minutes reached — War sequence complete ✔");
+        System.out.println("War sequence complete ✔");
     }
 
     private static boolean clickMultiplierLink(String multiplierText) {
