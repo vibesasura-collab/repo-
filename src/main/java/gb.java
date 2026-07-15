@@ -151,7 +151,7 @@ public class gb {
         System.out.println("Commencing attack spam sequence...");
 
         long startTime = System.currentTimeMillis();
-        long maxDuration = 5 * 60 * 1000; // 5 minutes
+        long maxDuration = 10 * 60 * 1000; // 10 minutes
 
         while (System.currentTimeMillis() - startTime < maxDuration) {
             boolean actionTaken = false;
