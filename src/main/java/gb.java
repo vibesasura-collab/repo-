@@ -32,37 +32,26 @@ public class gb {
         try {
             login(user, pass);
 
-            // 1. Go to Guild War page initially
             navigateToGuildWar();
 
-            // 2. Check for the Join link the first time
             String joinUrl = locateWarJoinUrl();
 
             if (joinUrl != null) {
-                System.out.println("Found Join URL on first try: " + joinUrl);
                 driver.get(joinUrl);
                 sleep(2000);
             } else {
-                System.out.println("Join link not found. Going to Main Page as fallback...");
                 clickMainPageIcon();
                 sleep(3000);
                 
-                // Go back to the Guild War page
                 navigateToGuildWar();
 
-                // 🔥 FIX: Now check for the Join link AGAIN after coming back!
-                System.out.println("Checking for Join link again after returning from Main page...");
                 joinUrl = locateWarJoinUrl();
                 if (joinUrl != null) {
-                    System.out.println("Found Join URL on second try: " + joinUrl);
                     driver.get(joinUrl);
                     sleep(2000);
-                } else {
-                    System.out.println("Join link still not found. Moving straight to combat wait stage.");
                 }
             }
 
-            // 3. Wait for combat start and fight
             waitForWarStartAndFight();
 
         } catch (Exception e) {
@@ -83,29 +72,23 @@ public class gb {
         driver.findElement(By.name("ppass")).sendKeys(pass);
         driver.findElement(By.cssSelector("input[type='submit']")).click();
         sleep(4000);
-
-        System.out.println("Login successful ✔");
     }
 
     private static void navigateToGuildWar() {
-        System.out.println("Navigating to Guild War page...");
         driver.get("https://elem.cards/");
         sleep(2000);
 
-        // Locates and clicks the "War: battle starts..." link
         List<WebElement> warLinks = driver.findElements(By.xpath("//a[contains(@href, '/guild/war/')]"));
         if (!warLinks.isEmpty()) {
             click(warLinks.get(0));
             sleep(2000);
         } else {
-            // Backup direct navigation if link isn't directly clickable
             driver.get("https://elem.cards/guild/war/");
             sleep(2000);
         }
     }
 
     private static String locateWarJoinUrl() {
-        // Scans for "/guild/war/arena/join/" links
         List<WebElement> joinLinks = driver.findElements(
                 By.xpath("//a[contains(@href,'/guild/war/arena/join/')]")
         );
@@ -122,7 +105,6 @@ public class gb {
         );
         if (!mainPageLinks.isEmpty()) {
             click(mainPageLinks.get(0));
-            System.out.println("Clicked Main page icon.");
         } else {
             driver.get("https://elem.cards/");
         }
@@ -132,27 +114,21 @@ public class gb {
         boolean battleStarted = false;
         int attempts = 0;
 
-        // Quick check to see if battle is active right away
         boolean attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
         boolean attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
         boolean attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
 
         if (attack0Exists || attack1Exists || attack2Exists) {
-            System.out.println("Battle is already active! Starting combat.");
             executeWarCombat();
             return;
         }
 
-        System.out.println("No active attacks found. Waiting for battle to start... Polling every 2 seconds.");
-
-        // Wait up to ~10 minutes (300 attempts of 2-second waits)
         while (attempts < 300) {
             attack0Exists = !driver.findElements(By.cssSelector("a[href*='attack0']")).isEmpty();
             attack1Exists = !driver.findElements(By.cssSelector("a[href*='attack1']")).isEmpty();
             attack2Exists = !driver.findElements(By.cssSelector("a[href*='attack2']")).isEmpty();
 
             if (attack0Exists || attack1Exists || attack2Exists) {
-                System.out.println("Battle Started! Attack links detected.");
                 battleStarted = true;
                 break;
             }
@@ -164,72 +140,56 @@ public class gb {
 
         if (battleStarted) {
             executeWarCombat();
-        } else {
-            System.out.println("Timed out waiting for the war battle to initiate.");
         }
     }
 
     private static void executeWarCombat() {
-        System.out.println("Commencing attack spam sequence...");
-
         long startTime = System.currentTimeMillis();
-        long maxDuration = 10 * 60 * 1000; // 10 minutes max fight time
+        long maxDuration = 10 * 60 * 1000; 
         int consecutiveNoActionCount = 0;
 
         while (System.currentTimeMillis() - startTime < maxDuration) {
             boolean actionTaken = false;
 
-            // 1. High-priority checks: Check for x1.6 or x1.5 matches instantly
             if (clickMultiplierLink("x 1.6")) {
                 actionTaken = true;
             } else if (clickMultiplierLink("x 1.5")) {
                 actionTaken = true;
             }
 
-            // 2. If high multipliers aren't on the page, hit 'Switch' to roll for them
             if (!actionTaken) {
                 boolean switched = clickIfPresent("a[href*='/chtarget/']");
                 if (switched) {
-                    sleep(400); // Quick brief sleep for switch state updates
+                    sleep(400); 
                     if (clickMultiplierLink("x 1.6")) actionTaken = true;
                     else if (clickMultiplierLink("x 1.5")) actionTaken = true;
                 }
             }
 
-            // 3. Middle-priority check: Fallback to regular x1 paths
             if (!actionTaken) {
                 if (clickMultiplierLink("x 1")) {
                     actionTaken = true;
                 }
             }
 
-            // 4. Absolute final fallback: Grab lower damage tier x0.5
             if (!actionTaken) {
                 if (clickMultiplierLink("x 0.5")) {
                     actionTaken = true;
                 }
             }
 
-            // --- SMART EXIT LOGIC ---
             if (!actionTaken) {
                 consecutiveNoActionCount++;
-                
-                // If we found nothing to attack for 10 consecutive refreshes (~15-20 seconds),
-                // we assume the war is finished or you ran out of energy.
                 if (consecutiveNoActionCount >= 10) {
-                    System.out.println("No targets or attacks available for 10 consecutive checks. Ending combat.");
                     break;
                 }
-
                 driver.navigate().refresh();
-                sleep(1500); // Slightly longer pause when page is idle
+                sleep(1500); 
             } else {
-                consecutiveNoActionCount = 0; // Reset counter since we successfully attacked
-                sleep(300); // Fast break between successful hits
+                consecutiveNoActionCount = 0; 
+                sleep(300); 
             }
         }
-
-        System.out.println("War sequence complete ✔");
     }
 
     private static boolean clickMultiplierLink(String multiplierText) {
