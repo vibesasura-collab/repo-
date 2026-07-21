@@ -5,7 +5,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.util.List;
 
-public class Aren {
+public class ArenBot {
 
     private static WebDriver driver;
 
