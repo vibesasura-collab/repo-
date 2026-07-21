@@ -118,4 +118,4 @@ jobs:
         env:
           GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
           GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
-        run: mvn -B exec:java -Dexec.mainClass=ArenaBot
+        run: mvn -B exec:java -Dexec.mainClass=ArenBot
