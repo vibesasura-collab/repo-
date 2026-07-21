@@ -1,4 +1,4 @@
-name: Arena Bot
+name: Aren Bot
 
 on:
   workflow_dispatch:
