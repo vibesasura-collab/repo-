@@ -117,7 +117,7 @@ jobs:
       - name: Build Project
         run: mvn -B clean compile
 
-      - name: Run Arena Bot
+      - name: Run Aren Bot
         env:
           GAME_ID: ${{ secrets[ matrix.game_id_secret ] }}
           GAME_PASSWORD: ${{ secrets[ matrix.game_password_secret ] }}
