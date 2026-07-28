@@ -93,14 +93,27 @@ public class ArenBot {
             sleep(2000);
         }
 
-        // 3. Find target list links and click the BOTTOM-MOST target available
+        // 3. Find target list links; if none are found, try switching to Page 2
         List<WebElement> attackTargets = driver.findElements(By.xpath("//a[contains(@href, '/guild/war/attack/')]"));
+        
+        if (attackTargets.isEmpty()) {
+            System.out.println("No targets on page 1, checking for Page 2...");
+            List<WebElement> page2Btn = driver.findElements(By.xpath("//a[contains(@href, '/guild/war/page_2/')]"));
+            if (!page2Btn.isEmpty()) {
+                click(page2Btn.get(0));
+                sleep(2000);
+                // Re-fetch attack targets after navigating to page 2
+                attackTargets = driver.findElements(By.xpath("//a[contains(@href, '/guild/war/attack/')]"));
+            }
+        }
+
+        // Click the BOTTOM-MOST target available
         if (!attackTargets.isEmpty()) {
             WebElement bottomTarget = attackTargets.get(attackTargets.size() - 1);
             click(bottomTarget);
             sleep(2000);
         } else {
-            System.out.println("No attack targets found in list.");
+            System.out.println("No attack targets found on any page.");
             return;
         }
 
