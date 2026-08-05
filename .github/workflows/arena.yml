@@ -1,16 +1,6 @@
 name: Arena Bot
 
 on:
-  schedule:
-    # -------------------------------------------------------------
-    # TARGET GAME TIME: GMT+1 (07:50, 12:50, 17:50)
-    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
-    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
-    # 07:50 Game Time -> 06:50 UTC/GMT
-    # 12:50 Game Time -> 11:50 UTC/GMT
-    # 17:50 Game Time -> 16:50 UTC/GMT
-    # -------------------------------------------------------------
-    
   workflow_dispatch:
     inputs:
       run_mode:
@@ -113,7 +103,7 @@ jobs:
 
       - name: Validate trigger source
         run: |
-          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
+          if [ "${{ github.event.inputs.run_mode }}" != "RUN" ]; then
             echo "Not authorized run. Exiting."
             exit 1
           fi
