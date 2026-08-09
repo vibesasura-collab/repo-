@@ -6,9 +6,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RaidBot {
 
@@ -26,17 +25,20 @@ public class RaidBot {
         }
 
         driver = setup();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(2));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         try {
             login(user, pass);
 
             while (true) {
-                // Direct jump to destination eliminates 3 menu click round-trips
+                // Direct jump to destination with realistic pacing
                 driver.get(BASE_URL + "/guild/graids/tweens/");
+                sleep(600, 1100);
+
                 clickJoinRaid();
 
                 System.out.println("Joined raid");
+                sleep(1000, 1800);
 
                 // ---------------- ATTACK LOOP ----------------
                 boolean raidActive = true;
@@ -44,24 +46,38 @@ public class RaidBot {
                 while (raidActive) {
                     boolean attacked = false;
 
+                    // Brief human hesitation before evaluating targets
+                    sleep(400, 900);
+
                     // 1. Priority: x1.5 multiplier
                     attacked = clickAttackByMultiplier("x 1.5");
 
                     // 2. Switch target pool if x1.5 not found
                     if (!attacked) {
-                        if (clickIfExists("a[href*='/chtarget/']")) {
+                        System.out.println("x1.5 not found. Attempting to Switch target pool...");
+                        boolean switched = clickIfExists("a[href*='/chtarget/']");
+                        
+                        if (switched) {
+                            sleep(800, 1400);
                             attacked = clickAttackByMultiplier("x 1.5");
                         }
                     }
 
                     // 3. Fallback: x1 multiplier
                     if (!attacked) {
+                        System.out.println("x1.5 unavailable. Scanning fallback for x1...");
                         attacked = clickAttackByMultiplier("x 1");
                     }
 
                     // 4. Final resort: x0.5 multiplier
                     if (!attacked) {
+                        System.out.println("No high tier targets. Opting for fallback x0.5...");
                         attacked = clickAttackByMultiplier("x 0.5");
+                    }
+
+                    // Pause between attack actions
+                    if (attacked) {
+                        sleep(1200, 2200);
                     }
 
                     // Handle scenario where attack patterns are exhausted
@@ -70,6 +86,7 @@ public class RaidBot {
 
                         if (clickIfExists("a[href*='/start_cave/']")) {
                             System.out.println("Start digging clicked");
+                            sleep(1500, 2500);
                         } else {
                             System.out.println("No start digging -> restarting guild flow");
                             raidActive = false;
@@ -88,18 +105,27 @@ public class RaidBot {
     // ---------------- LOGIN ----------------
     private static void login(String user, String pass) {
         driver.get(BASE_URL + "/login/");
+        sleep(800, 1500);
 
-        wait.until(ExpectedConditions.presenceOfElementLocated(By.name("plogin"))).sendKeys(user);
-        driver.findElement(By.name("ppass")).sendKeys(pass);
-        
+        WebElement userField = wait.until(ExpectedConditions.presenceOfElementLocated(By.name("plogin")));
+        userField.sendKeys(user);
+        sleep(200, 500);
+
+        WebElement passField = driver.findElement(By.name("ppass"));
+        passField.sendKeys(pass);
+        sleep(300, 700);
+
         WebElement submit = driver.findElement(By.cssSelector("input[type='submit']"));
-        jsClick(submit);
+        humanClick(submit);
 
-        // Fast optional check for popup without blocking flow
+        sleep(1800, 2800);
+
         try {
-            WebElement urfin = new WebDriverWait(driver, Duration.ofMillis(800))
-                    .until(ExpectedConditions.elementToBeClickable(By.cssSelector("a.urfin")));
-            jsClick(urfin);
+            List<WebElement> urfinList = driver.findElements(By.cssSelector("a.urfin"));
+            if (!urfinList.isEmpty()) {
+                humanClick(urfinList.get(0));
+                sleep(1000, 1500);
+            }
         } catch (Exception ignored) {}
     }
 
@@ -108,7 +134,7 @@ public class RaidBot {
             WebElement el = wait.until(
                 ExpectedConditions.elementToBeClickable(By.cssSelector("a[href^='/guild/graids/tweens/join/']"))
             );
-            jsClick(el);
+            humanClick(el);
         } catch (Exception e) {
             System.out.println("Join raid not found");
         }
@@ -119,22 +145,22 @@ public class RaidBot {
         try {
             List<WebElement> list = driver.findElements(By.cssSelector(css));
             if (list.isEmpty()) return false;
-            jsClick(list.get(0));
+            
+            humanClick(list.get(0));
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    // ---------------- MULTIPLIER MATCHING (SINGLE XPATH CALL) ----------------
+    // ---------------- MULTIPLIER MATCHING ----------------
     private static boolean clickAttackByMultiplier(String targetMultiplier) {
         try {
-            // Evaluates text condition natively inside browser DOM in 1 network call
             String xpath = String.format("//div[contains(@class,'fb_path') and contains(., '%s')]//a[contains(@href, '/attack')]", targetMultiplier);
             List<WebElement> links = driver.findElements(By.xpath(xpath));
 
             if (!links.isEmpty()) {
-                jsClick(links.get(0));
+                humanClick(links.get(0));
                 System.out.println("Successfully attacked targeting: " + targetMultiplier);
                 return true;
             }
@@ -144,9 +170,25 @@ public class RaidBot {
         return false;
     }
 
-    // ---------------- HELPER FOR INSTANT JS CLICKS ----------------
-    private static void jsClick(WebElement element) {
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+    // ---------------- HUMAN SIMULATION HELPERS ----------------
+
+    // Performs click with a small random hover/reaction delay beforehand
+    private static void humanClick(WebElement element) {
+        try {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", element);
+            sleep(150, 400); // Reaction delay after scrolling to element
+            element.click();
+        } catch (Exception ex) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        }
+    }
+
+    // Random sleep range to avoid predictable robotic timing
+    private static void sleep(int minMs, int maxMs) {
+        try {
+            int delay = ThreadLocalRandom.current().nextInt(minMs, maxMs + 1);
+            Thread.sleep(delay);
+        } catch (Exception ignored) {}
     }
 
     // ---------------- DRIVER SETUP ----------------
@@ -154,23 +196,12 @@ public class RaidBot {
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
-        
-        // Don't wait for images, ads, or external scripts to complete full load
-        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
 
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");
-        options.addArguments("--blink-settings=imagesEnabled=false");
         options.addArguments("--disable-extensions");
-        options.addArguments("--disable-notifications");
-
-        // Block images and stylesheets at browser level to minimize network payload
-        Map<String, Object> prefs = new HashMap<>();
-        prefs.put("profile.managed_default_content_settings.images", 2);
-        prefs.put("profile.managed_default_content_settings.stylesheets", 2);
-        options.setExperimentalOption("prefs", prefs);
 
         return new ChromeDriver(options);
     }
