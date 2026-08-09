@@ -25,20 +25,18 @@ public class RaidBot {
         }
 
         driver = setup();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(3));
 
         try {
             login(user, pass);
 
             while (true) {
-                // Direct jump to destination with realistic pacing
                 driver.get(BASE_URL + "/guild/graids/tweens/");
-                sleep(600, 1100);
+                sleep(200, 400);
 
                 clickJoinRaid();
-
                 System.out.println("Joined raid");
-                sleep(1000, 1800);
+                sleep(300, 500);
 
                 // ---------------- ATTACK LOOP ----------------
                 boolean raidActive = true;
@@ -46,47 +44,36 @@ public class RaidBot {
                 while (raidActive) {
                     boolean attacked = false;
 
-                    // Brief human hesitation before evaluating targets
-                    sleep(400, 900);
-
                     // 1. Priority: x1.5 multiplier
                     attacked = clickAttackByMultiplier("x 1.5");
 
                     // 2. Switch target pool if x1.5 not found
                     if (!attacked) {
-                        System.out.println("x1.5 not found. Attempting to Switch target pool...");
-                        boolean switched = clickIfExists("a[href*='/chtarget/']");
-                        
-                        if (switched) {
-                            sleep(800, 1400);
+                        if (clickIfExists("a[href*='/chtarget/']")) {
+                            sleep(200, 400);
                             attacked = clickAttackByMultiplier("x 1.5");
                         }
                     }
 
                     // 3. Fallback: x1 multiplier
                     if (!attacked) {
-                        System.out.println("x1.5 unavailable. Scanning fallback for x1...");
                         attacked = clickAttackByMultiplier("x 1");
                     }
 
                     // 4. Final resort: x0.5 multiplier
                     if (!attacked) {
-                        System.out.println("No high tier targets. Opting for fallback x0.5...");
                         attacked = clickAttackByMultiplier("x 0.5");
                     }
 
-                    // Pause between attack actions
+                    // Snappy delay between attacks (300-500ms)
                     if (attacked) {
-                        sleep(1200, 2200);
-                    }
-
-                    // Handle scenario where attack patterns are exhausted
-                    if (!attacked) {
+                        sleep(300, 500);
+                    } else {
                         System.out.println("No targeted action sequences executed successfully");
 
                         if (clickIfExists("a[href*='/start_cave/']")) {
                             System.out.println("Start digging clicked");
-                            sleep(1500, 2500);
+                            sleep(400, 700);
                         } else {
                             System.out.println("No start digging -> restarting guild flow");
                             raidActive = false;
@@ -105,26 +92,23 @@ public class RaidBot {
     // ---------------- LOGIN ----------------
     private static void login(String user, String pass) {
         driver.get(BASE_URL + "/login/");
-        sleep(800, 1500);
 
         WebElement userField = wait.until(ExpectedConditions.presenceOfElementLocated(By.name("plogin")));
         userField.sendKeys(user);
-        sleep(200, 500);
-
+        
         WebElement passField = driver.findElement(By.name("ppass"));
         passField.sendKeys(pass);
-        sleep(300, 700);
 
         WebElement submit = driver.findElement(By.cssSelector("input[type='submit']"));
-        humanClick(submit);
+        quickClick(submit);
 
-        sleep(1800, 2800);
+        sleep(600, 1000);
 
         try {
             List<WebElement> urfinList = driver.findElements(By.cssSelector("a.urfin"));
             if (!urfinList.isEmpty()) {
-                humanClick(urfinList.get(0));
-                sleep(1000, 1500);
+                quickClick(urfinList.get(0));
+                sleep(300, 500);
             }
         } catch (Exception ignored) {}
     }
@@ -134,7 +118,7 @@ public class RaidBot {
             WebElement el = wait.until(
                 ExpectedConditions.elementToBeClickable(By.cssSelector("a[href^='/guild/graids/tweens/join/']"))
             );
-            humanClick(el);
+            quickClick(el);
         } catch (Exception e) {
             System.out.println("Join raid not found");
         }
@@ -146,7 +130,7 @@ public class RaidBot {
             List<WebElement> list = driver.findElements(By.cssSelector(css));
             if (list.isEmpty()) return false;
             
-            humanClick(list.get(0));
+            quickClick(list.get(0));
             return true;
         } catch (Exception e) {
             return false;
@@ -160,7 +144,7 @@ public class RaidBot {
             List<WebElement> links = driver.findElements(By.xpath(xpath));
 
             if (!links.isEmpty()) {
-                humanClick(links.get(0));
+                quickClick(links.get(0));
                 System.out.println("Successfully attacked targeting: " + targetMultiplier);
                 return true;
             }
@@ -170,20 +154,18 @@ public class RaidBot {
         return false;
     }
 
-    // ---------------- HUMAN SIMULATION HELPERS ----------------
+    // ---------------- FAST-PACED CLICK / SLEEP ----------------
 
-    // Performs click with a small random hover/reaction delay beforehand
-    private static void humanClick(WebElement element) {
+    // Fast click with a tiny sub-100ms micro-pause
+    private static void quickClick(WebElement element) {
         try {
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", element);
-            sleep(150, 400); // Reaction delay after scrolling to element
+            sleep(40, 90);
             element.click();
         } catch (Exception ex) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
         }
     }
 
-    // Random sleep range to avoid predictable robotic timing
     private static void sleep(int minMs, int maxMs) {
         try {
             int delay = ThreadLocalRandom.current().nextInt(minMs, maxMs + 1);
