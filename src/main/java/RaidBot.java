@@ -25,18 +25,18 @@ public class RaidBot {
         }
 
         driver = setup();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         try {
             login(user, pass);
 
             while (true) {
                 driver.get(BASE_URL + "/guild/graids/tweens/");
-                sleep(200, 400);
+                sleep(1000, 1800); // Increased page load wait
 
                 clickJoinRaid();
                 System.out.println("Joined raid");
-                sleep(300, 500);
+                sleep(1200, 2000); // Increased post-join delay
 
                 // ---------------- ATTACK LOOP ----------------
                 boolean raidActive = true;
@@ -50,7 +50,7 @@ public class RaidBot {
                     // 2. Switch target pool if x1.5 not found
                     if (!attacked) {
                         if (clickIfExists("a[href*='/chtarget/']")) {
-                            sleep(200, 400);
+                            sleep(1000, 1800); // Increased target switch delay
                             attacked = clickAttackByMultiplier("x 1.5");
                         }
                     }
@@ -65,15 +65,15 @@ public class RaidBot {
                         attacked = clickAttackByMultiplier("x 0.5");
                     }
 
-                    // Snappy delay between attacks (300-500ms)
+                    // Pacing delay between attacks (1.2 - 2.2 seconds)
                     if (attacked) {
-                        sleep(300, 500);
+                        sleep(1200, 2200);
                     } else {
                         System.out.println("No targeted action sequences executed successfully");
 
                         if (clickIfExists("a[href*='/start_cave/']")) {
                             System.out.println("Start digging clicked");
-                            sleep(400, 700);
+                            sleep(1500, 2500); // Increased post-dig delay
                         } else {
                             System.out.println("No start digging -> restarting guild flow");
                             raidActive = false;
@@ -102,13 +102,13 @@ public class RaidBot {
         WebElement submit = driver.findElement(By.cssSelector("input[type='submit']"));
         quickClick(submit);
 
-        sleep(600, 1000);
+        sleep(1500, 2500); // Increased post-login navigation delay
 
         try {
             List<WebElement> urfinList = driver.findElements(By.cssSelector("a.urfin"));
             if (!urfinList.isEmpty()) {
                 quickClick(urfinList.get(0));
-                sleep(300, 500);
+                sleep(1000, 1800);
             }
         } catch (Exception ignored) {}
     }
@@ -154,12 +154,12 @@ public class RaidBot {
         return false;
     }
 
-    // ---------------- FAST-PACED CLICK / SLEEP ----------------
+    // ---------------- PACED CLICK / SLEEP ----------------
 
-    // Fast click with a tiny sub-100ms micro-pause
+    // Pre-click micro-pause (200-450ms)
     private static void quickClick(WebElement element) {
         try {
-            sleep(40, 90);
+            sleep(200, 450);
             element.click();
         } catch (Exception ex) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
