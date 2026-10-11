@@ -1,14 +1,6 @@
 name: Reward Bot
 
-on:
-  schedule:
-    # -------------------------------------------------------------
-    # TARGET GAME TIME: GMT+1 (Every day at 23:00)
-    # GITHUB CRON REQUIREMENT: Must use standard UTC/GMT time.
-    # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
-    # 23:00 Game Time -> 22:00 UTC/GMT
-    # -------------------------------------------------------------
-    - cron: '0 22 * * *'
+
 
   workflow_dispatch:
     inputs:
