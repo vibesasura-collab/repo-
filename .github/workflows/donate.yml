@@ -8,7 +8,7 @@ on:
     # CONVERSION: Subtract 1 hour from Game Time to get UTC/GMT.
     # 19:00 Game Time -> 18:00 UTC/GMT
     # -------------------------------------------------------------
-    - cron: '0 18 * * *'
+
 
   workflow_dispatch:
     inputs:
