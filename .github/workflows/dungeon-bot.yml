@@ -1,9 +1,5 @@
 name: Dungeon Bot
 
-on:
-  schedule:
-    # 03:30 GMT+1 = 02:30 UTC
-    - cron: '30 2 * * *'
 
   workflow_dispatch:
     inputs:
